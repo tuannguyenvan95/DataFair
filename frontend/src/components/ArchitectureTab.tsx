@@ -119,9 +119,53 @@ export const ArchitectureTab: React.FC = () => {
             <div className="w-7 h-7 rounded-lg bg-accent-emerald/20 text-accent-emerald flex items-center justify-center font-mono font-bold text-xs mb-3">
               04
             </div>
-            <h5 className="text-sm font-bold text-white mb-1">Automated Settlement</h5>
+            <h5 className="text-sm font-bold text-white mb-1">Two-Sided Settlement</h5>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Native GEN released via <code>emit_transfer</code> to provider or refunded to buyer.
+              Native GEN split fairly (100% qualified, 65/35 partial split, retry chance, or 50/50 bilateral appeal).
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Two-Sided Escrow Protection Matrix */}
+      <div className="holo-card p-6 sm:p-8 rounded-3xl border border-cyan-500/30">
+        <div className="flex items-center space-x-2 mb-6">
+          <Scale className="w-5 h-5 text-cyan-400" />
+          <h3 className="text-lg font-bold text-white tracking-tight font-display">
+            Two-Sided Fairness Matrix: Protecting Buyer & Data Curator
+          </h3>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xs font-mono">
+          <div className="bg-dark-900/90 p-4 rounded-2xl border border-emerald-500/30">
+            <span className="text-emerald-400 font-bold uppercase text-[11px] block mb-1">1. Full Release (&gt;= 80)</span>
+            <p className="text-white font-bold text-sm mb-1">100% Payout to Provider</p>
+            <p className="text-slate-400 text-[11px] leading-relaxed">
+              Full dataset meets all rubric parameters, validated syntax, and passes LLM evaluation.
+            </p>
+          </div>
+
+          <div className="bg-dark-900/90 p-4 rounded-2xl border border-purple-500/30">
+            <span className="text-purple-400 font-bold uppercase text-[11px] block mb-1">2. Partial Split (60 - 79)</span>
+            <p className="text-white font-bold text-sm mb-1">65% Curator / 35% Buyer</p>
+            <p className="text-slate-400 text-[11px] leading-relaxed">
+              Data is usable with minor edge imperfections. Curator gets paid for compute while buyer gets a rebate.
+            </p>
+          </div>
+
+          <div className="bg-dark-900/90 p-4 rounded-2xl border border-yellow-500/30">
+            <span className="text-yellow-400 font-bold uppercase text-[11px] block mb-1">3. Retry Grace Window</span>
+            <p className="text-white font-bold text-sm mb-1">Attempt 2 of 2 Resubmit</p>
+            <p className="text-slate-400 text-[11px] leading-relaxed">
+              Curator is not instantly slashed for simple JSONL line syntax bugs on first delivery.
+            </p>
+          </div>
+
+          <div className="bg-dark-900/90 p-4 rounded-2xl border border-amber-500/30">
+            <span className="text-amber-400 font-bold uppercase text-[11px] block mb-1">4. Bilateral Appeal (50/50)</span>
+            <p className="text-white font-bold text-sm mb-1">2-of-2 Multisig Ratification</p>
+            <p className="text-slate-400 text-[11px] leading-relaxed">
+              Either party can file an appeal. 50/50 mutual split or unilateral concession resolves edge disputes.
             </p>
           </div>
         </div>

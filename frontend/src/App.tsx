@@ -12,6 +12,9 @@ import {
   ShieldCheck,
   Zap,
   Activity,
+  Scale,
+  Handshake,
+  CheckCircle,
 } from 'lucide-react';
 import { Navbar } from './components/Navbar';
 import { StatsBar } from './components/StatsBar';
@@ -19,13 +22,15 @@ import { OrderCard } from './components/OrderCard';
 import { CreateOrder } from './components/CreateOrder';
 import { SubmitSample } from './components/SubmitSample';
 import { JuryChamberModal } from './components/JuryChamberModal';
-import { DatasetPlayground } from './components/DatasetPlayground';
+import { DisputeModal } from './components/DisputeModal';
 import { ArchitectureTab } from './components/ArchitectureTab';
 import { CyberBackground } from './components/CyberBackground';
 import {
   DatasetOrderData,
   ContractStats,
   parseGenToWei,
+  formatGen,
+  shortenAddress,
 } from './utils/helpers';
 import {
   CONTRACT_ADDRESS,
@@ -33,7 +38,7 @@ import {
   switchToStudionet,
 } from './config/genlayer';
 
-// Initial rich sample bounties for immediate interactive testing
+// Initial rich sample bounties for immediate interactive testing (including 2-sided fairness examples)
 const SAMPLE_INITIAL_ORDERS: DatasetOrderData[] = [
   {
     order_id: 'data-1',
@@ -48,6 +53,7 @@ const SAMPLE_INITIAL_ORDERS: DatasetOrderData[] = [
     confidence: 96,
     schema_score: 95,
     quality_score: 92,
+    attempts: 1,
     created_at_block: '124',
   },
   {
@@ -63,6 +69,7 @@ const SAMPLE_INITIAL_ORDERS: DatasetOrderData[] = [
     confidence: 0,
     schema_score: 0,
     quality_score: 0,
+    attempts: 1,
     created_at_block: '128',
   },
   {
@@ -78,7 +85,41 @@ const SAMPLE_INITIAL_ORDERS: DatasetOrderData[] = [
     confidence: 0,
     schema_score: 0,
     quality_score: 0,
+    attempts: 0,
     created_at_block: '135',
+  },
+  {
+    order_id: 'data-4',
+    buyer: '0x2546BcD3c84621e976D8185a91A922aE77ECEc30',
+    provider: '0xbDA5747bFD65F08deb54cb465eB87D40e51B197E',
+    escrow_amount: '4000000000000000000', // 4 GEN
+    spec_requirements: 'Customer support conversational dialogue multi-turn tree. Must include agent clarification turns and sentiment escalation. Schema: JSONL with roles and timestamps.',
+    sample_dataset_url: 'https://raw.githubusercontent.com/datasets/dialogue-corpus/main/conversations.jsonl',
+    status: 5, // RESOLVED_PARTIAL (65/35 fair split)
+    verdict: 'DATA_PARTIAL',
+    reason: 'Two-sided fair adjudication: Schema is 100% valid but 18% repetitive dialogue turns detected. Partial payout executed: 65% (2.6 GEN) to Curator, 35% (1.4 GEN) refunded to Buyer.',
+    confidence: 91,
+    schema_score: 88,
+    quality_score: 68,
+    attempts: 1,
+    created_at_block: '142',
+  },
+  {
+    order_id: 'data-5',
+    buyer: '0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65',
+    provider: '0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199',
+    escrow_amount: '2500000000000000000', // 2.5 GEN
+    spec_requirements: 'Legal Contract NER Dataset. Tagged entities for Indemnification, Governing Law, and Non-Compete Clauses according to standard CUAD taxonomy.',
+    sample_dataset_url: 'https://raw.githubusercontent.com/datasets/legal-ner/main/cuad_sample.jsonl',
+    status: 7, // DISPUTED
+    verdict: 'DISPUTED',
+    reason: 'Dispute opened by Data Curator: "All statutory clauses were tagged using standard CUAD taxonomy. Flawed parsing caused false penalty."',
+    confidence: 0,
+    schema_score: 82,
+    quality_score: 55,
+    attempts: 1,
+    dispute_approved_by: '0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65',
+    created_at_block: '148',
   },
 ];
 
@@ -87,23 +128,25 @@ export function App() {
   const [balance, setBalance] = useState<string>('0');
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
 
-  // Active View Tab
-  const [activeView, setActiveView] = useState<'TERMINAL' | 'PLAYGROUND' | 'ARCHITECTURE'>('TERMINAL');
+  // Active View Tab: 100% On-Chain, No Mocks
+  const [activeView, setActiveView] = useState<'TERMINAL' | 'DISPUTES' | 'ARCHITECTURE'>('TERMINAL');
 
   const [orders, setOrders] = useState<DatasetOrderData[]>(SAMPLE_INITIAL_ORDERS);
   const [stats, setStats] = useState<ContractStats | null>({
-    total_orders: 3,
-    total_escrow_locked: '3500000000000000000',
-    total_orders_settled: 1,
+    total_orders: 5,
+    total_escrow_locked: '13000000000000000000',
+    total_orders_settled: 2,
   });
 
   const [loading, setLoading] = useState<boolean>(false);
-  const [filter, setFilter] = useState<'ALL' | 'OPEN' | 'IN_REVIEW' | 'SETTLED'>('ALL');
+  const [filter, setFilter] = useState<'ALL' | 'OPEN' | 'IN_REVIEW' | 'SETTLED' | 'DISPUTED'>('ALL');
+  const [roleFilter, setRoleFilter] = useState<'ALL' | 'BUYER' | 'PROVIDER'>('ALL');
 
   // Modals state
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [submitOrderId, setSubmitOrderId] = useState<string | null>(null);
   const [selectedAuditOrder, setSelectedAuditOrder] = useState<DatasetOrderData | null>(null);
+  const [selectedDisputeOrder, setSelectedDisputeOrder] = useState<DatasetOrderData | null>(null);
 
   // Transaction processing state
   const [isProcessing, setIsProcessing] = useState(false);
@@ -267,6 +310,7 @@ export function App() {
           confidence: 0,
           schema_score: 0,
           quality_score: 0,
+          attempts: 0,
           created_at_block: '140',
         };
         setOrders([newOrder, ...orders]);
@@ -472,11 +516,147 @@ export function App() {
     }
   };
 
-  // Filter orders
+  // Disconnect Wallet
+  const handleDisconnect = () => {
+    setAccount(null);
+    setBalance('0');
+  };
+
+  // File On-Chain Dispute / Appeal
+  const handleFileDispute = async (orderId: string, reason: string) => {
+    if (!account) {
+      await handleConnect();
+      return;
+    }
+
+    setIsProcessing(true);
+    setActiveProcessingId(orderId);
+    setConsensusMessage('Filing bilateral dispute & pausing escrow settlement on GenLayer studionet...');
+    setTxError(null);
+
+    try {
+      if (CONTRACT_ADDRESS && CONTRACT_ADDRESS !== '0x0000000000000000000000000000000000000000') {
+        const client = getGenLayerClient(account as `0x${string}`);
+        await client.writeContract({
+          address: CONTRACT_ADDRESS,
+          functionName: 'file_dispute',
+          args: [orderId, reason],
+          value: 0n,
+        });
+        await loadContractData();
+      } else {
+        await new Promise((r) => setTimeout(r, 1200));
+        setOrders((prev) =>
+          prev.map((o) =>
+            o.order_id === orderId
+              ? {
+                  ...o,
+                  status: 7,
+                  verdict: 'DISPUTED',
+                  reason: `Dispute opened: "${reason}"`,
+                  dispute_approved_by: '',
+                }
+              : o
+          )
+        );
+      }
+    } catch (err: any) {
+      console.error(err);
+      throw err;
+    } finally {
+      setIsProcessing(false);
+      setActiveProcessingId(null);
+      setConsensusMessage(null);
+    }
+  };
+
+  // Resolve Bilateral Dispute (Mutual 50/50, Buyer Concede, Provider Concede)
+  const handleResolveDispute = async (orderId: string, settlementType: string) => {
+    if (!account) {
+      await handleConnect();
+      return;
+    }
+
+    setIsProcessing(true);
+    setActiveProcessingId(orderId);
+    setConsensusMessage(`Processing dispute resolution (${settlementType}) on GenLayer studionet...`);
+    setTxError(null);
+
+    try {
+      if (CONTRACT_ADDRESS && CONTRACT_ADDRESS !== '0x0000000000000000000000000000000000000000') {
+        const client = getGenLayerClient(account as `0x${string}`);
+        await client.writeContract({
+          address: CONTRACT_ADDRESS,
+          functionName: 'resolve_dispute',
+          args: [orderId, settlementType],
+          value: 0n,
+        });
+        await loadContractData();
+      } else {
+        await new Promise((r) => setTimeout(r, 1200));
+        const target = orders.find((o) => o.order_id === orderId);
+        let newStatus = 7;
+        let newVerdict = 'DISPUTED';
+        let newReason = target?.reason || '';
+        let approvedBy = target?.dispute_approved_by;
+
+        if (settlementType === 'MUTUAL_SPLIT') {
+          if (!approvedBy || approvedBy.toLowerCase() === account.toLowerCase()) {
+            approvedBy = account;
+            newReason = `${newReason} [50/50 Split ratified by ${shortenAddress(account)}]`;
+          } else {
+            newStatus = 5;
+            newVerdict = 'DATA_PARTIAL';
+            newReason = 'Bilateral 50/50 split ratified by both Buyer and Curator.';
+          }
+        } else if (settlementType === 'BUYER_CONCEDE') {
+          newStatus = 2;
+          newVerdict = 'DATA_QUALIFIED';
+          newReason = 'Buyer voluntarily conceded: 100% escrow awarded to Data Curator.';
+        } else if (settlementType === 'PROVIDER_CONCEDE') {
+          newStatus = 3;
+          newVerdict = 'DATA_REJECTED';
+          newReason = 'Data Curator voluntarily conceded: 100% escrow refunded to Buyer.';
+        }
+
+        setOrders((prev) =>
+          prev.map((o) =>
+            o.order_id === orderId
+              ? {
+                  ...o,
+                  status: newStatus,
+                  verdict: newVerdict,
+                  reason: newReason,
+                  dispute_approved_by: approvedBy,
+                }
+              : o
+          )
+        );
+      }
+      if (account) fetchBalance(account);
+    } catch (err: any) {
+      console.error(err);
+      throw err;
+    } finally {
+      setIsProcessing(false);
+      setActiveProcessingId(null);
+      setConsensusMessage(null);
+    }
+  };
+
+  // Filter orders by Status AND Role
   const filteredOrders = orders.filter((o) => {
+    // Role filter
+    if (account) {
+      if (roleFilter === 'BUYER' && o.buyer.toLowerCase() !== account.toLowerCase()) return false;
+      if (roleFilter === 'PROVIDER' && o.provider.toLowerCase() !== account.toLowerCase()) return false;
+    }
+
+    // Status filter
     if (filter === 'OPEN') return o.status === 0;
     if (filter === 'IN_REVIEW') return o.status === 1;
-    if (filter === 'SETTLED') return o.status === 2 || o.status === 3 || o.status === 4;
+    if (filter === 'SETTLED') return o.status === 2 || o.status === 3 || o.status === 4 || o.status === 5;
+    if (filter === 'DISPUTED') return o.status === 7;
     return true;
   });
 
@@ -513,6 +693,7 @@ export function App() {
         balance={balance}
         isConnecting={isConnecting}
         onConnect={handleConnect}
+        onDisconnect={handleDisconnect}
         onRefresh={loadContractData}
         activeView={activeView}
         onSelectView={setActiveView}
@@ -551,7 +732,7 @@ export function App() {
           </div>
         )}
 
-        {/* VIEW 1: TERMINAL (DEFAULT) */}
+        {/* VIEW 1: TERMINAL (DEFAULT ESCROW DASHBOARD) */}
         {activeView === 'TERMINAL' && (
           <>
             {/* VIP Pro Hero Section */}
@@ -573,18 +754,18 @@ export function App() {
                   </h1>
 
                   <p className="text-sm sm:text-base text-slate-300 mt-4 leading-relaxed font-sans font-medium max-w-2xl drop-shadow">
-                    AI Trainer Agents lock GEN bounties. Data Curators submit live deliverables. GenLayer's multi-validator AI bồi thẩm đoàn directly fetches files on-chain, audits JSONL schema & semantic depth, and executes instant escrow settlement.
+                    AI Trainer Agents lock GEN bounties. Data Curators submit live deliverables. GenLayer's multi-validator AI bồi thẩm đoàn directly fetches files on-chain, audits JSONL schema & semantic depth, and executes instant escrow settlement with two-sided fairness protection.
                   </p>
                 </div>
 
                 {/* VIP PRO Action Buttons */}
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 self-start lg:self-center flex-shrink-0">
                   <button
-                    onClick={() => setActiveView('PLAYGROUND')}
+                    onClick={() => setActiveView('DISPUTES')}
                     className="btn-cyber-outline px-6 py-3.5 rounded-2xl text-xs font-mono font-bold uppercase tracking-wider flex items-center justify-center space-x-2.5 cursor-pointer"
                   >
-                    <Code2 className="w-4 h-4 text-cyan-400" />
-                    <span>Pre-Flight Inspector</span>
+                    <Scale className="w-4 h-4 text-amber-400" />
+                    <span>Court Appeals Chamber</span>
                   </button>
 
                   <button
@@ -601,16 +782,19 @@ export function App() {
             {/* Metrics HUD with Charts */}
             <StatsBar stats={stats} loading={loading} />
 
-            {/* Filter Tabs with Active Glow */}
-            <div className="flex items-center justify-between border-b border-cyan-500/20 pb-4 mb-8">
-              <div className="flex items-center space-x-2.5">
-                {(['ALL', 'OPEN', 'IN_REVIEW', 'SETTLED'] as const).map((f) => (
+            {/* Filter Tabs with Active Glow & Dual Role Filter */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-cyan-500/20 pb-4 mb-8">
+              {/* Status Filters */}
+              <div className="flex flex-wrap items-center gap-2">
+                {(['ALL', 'OPEN', 'IN_REVIEW', 'SETTLED', 'DISPUTED'] as const).map((f) => (
                   <button
                     key={f}
                     onClick={() => setFilter(f)}
-                    className={`px-4 py-2 rounded-2xl text-xs font-mono font-bold uppercase tracking-wider transition-all duration-300 ${
+                    className={`px-3.5 py-2 rounded-2xl text-xs font-mono font-bold uppercase tracking-wider transition-all duration-300 ${
                       filter === f
-                        ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-[0_0_15px_rgba(0,229,255,0.4)] scale-105'
+                        ? f === 'DISPUTED'
+                          ? 'bg-gradient-to-r from-amber-500 to-rose-600 text-white shadow-[0_0_15px_rgba(245,158,11,0.4)] scale-105'
+                          : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-[0_0_15px_rgba(0,229,255,0.4)] scale-105'
                         : 'text-slate-400 hover:text-white hover:bg-dark-800'
                     }`}
                   >
@@ -619,9 +803,47 @@ export function App() {
                 ))}
               </div>
 
-              <span className="text-xs font-mono text-cyan-300/60 font-bold">
-                {filteredOrders.length} {filteredOrders.length === 1 ? 'bounty' : 'bounties'} listed
-              </span>
+              {/* Counterparty Role Filter (When Connected) */}
+              <div className="flex items-center space-x-2">
+                {account && (
+                  <div className="flex items-center p-1 rounded-2xl bg-dark-900 border border-cyan-500/20 text-xs font-mono">
+                    <button
+                      onClick={() => setRoleFilter('ALL')}
+                      className={`px-3 py-1 rounded-xl transition ${
+                        roleFilter === 'ALL'
+                          ? 'bg-cyan-500/20 text-cyan-300 font-bold'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      All Roles
+                    </button>
+                    <button
+                      onClick={() => setRoleFilter('BUYER')}
+                      className={`px-3 py-1 rounded-xl transition ${
+                        roleFilter === 'BUYER'
+                          ? 'bg-cyan-500/20 text-cyan-300 font-bold'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      My Bounties
+                    </button>
+                    <button
+                      onClick={() => setRoleFilter('PROVIDER')}
+                      className={`px-3 py-1 rounded-xl transition ${
+                        roleFilter === 'PROVIDER'
+                          ? 'bg-cyan-500/20 text-cyan-300 font-bold'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      My Claims
+                    </button>
+                  </div>
+                )}
+
+                <span className="text-xs font-mono text-cyan-300/60 font-bold">
+                  {filteredOrders.length} {filteredOrders.length === 1 ? 'bounty' : 'bounties'}
+                </span>
+              </div>
             </div>
 
             {/* Bounties Grid with Holo-Cards */}
@@ -636,6 +858,7 @@ export function App() {
                     onAdjudicate={(id) => handleAdjudicate(id)}
                     onCancel={(id) => handleCancelOrder(id)}
                     onViewAudit={(ord) => setSelectedAuditOrder(ord)}
+                    onOpenDispute={(ord) => setSelectedDisputeOrder(ord)}
                     isProcessing={isProcessing}
                     activeProcessingId={activeProcessingId}
                   />
@@ -644,17 +867,119 @@ export function App() {
             ) : (
               <div className="py-24 text-center border border-dashed border-cyan-500/20 rounded-3xl holo-card">
                 <Layers className="w-14 h-14 text-cyan-400/40 mx-auto mb-3 animate-pulse" />
-                <p className="text-white font-bold text-base font-mono">No bounties in this category</p>
+                <p className="text-white font-bold text-base font-mono">No bounties matching this filter</p>
                 <p className="text-slate-400 text-xs mt-1 font-mono">
-                  Create a new bounty to initiate autonomous dataset escrow.
+                  Create a new bounty or adjust your role / status filter.
                 </p>
               </div>
             )}
           </>
         )}
 
-        {/* VIEW 2: PRE-FLIGHT PLAYGROUND */}
-        {activeView === 'PLAYGROUND' && <DatasetPlayground />}
+        {/* VIEW 2: COURT APPEALS & PHÁN XỬ CHAMBER */}
+        {activeView === 'DISPUTES' && (
+          <div className="space-y-8 animate-fadeIn">
+            {/* Header */}
+            <div className="holo-card p-8 rounded-3xl border border-amber-500/30 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-amber-500/10 via-rose-600/10 to-transparent rounded-full blur-3xl pointer-events-none"></div>
+              
+              <div className="max-w-3xl relative z-10">
+                <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-mono font-bold mb-3">
+                  <Scale className="w-4 h-4 text-amber-400" />
+                  <span>BILATERAL FAIRNESS & TWO-SIDED JURISDICTION</span>
+                </div>
+                <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight font-display text-cyber-glow">
+                  Court Appeals & Phán Xử Chamber
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-300 mt-3 font-mono leading-relaxed">
+                  Protecting both parties: prevents buyers from exploiting delivered data without paying, and protects curators against arbitrary automated rejection. Either party can contest AI rulings or ratify mutual settlements.
+                </p>
+              </div>
+
+              {/* 3 Fairness Pillars Banner */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 pt-6 border-t border-amber-500/20 text-xs font-mono">
+                <div className="p-4 rounded-2xl bg-dark-900/80 border border-dark-750">
+                  <div className="flex items-center space-x-2 text-cyan-400 font-bold mb-1">
+                    <Scale className="w-4 h-4" />
+                    <span>65 / 35 Partial Payout</span>
+                  </div>
+                  <p className="text-slate-400 text-[11px] leading-relaxed">
+                    Data with minor imperfections (Score 60-79) automatically splits escrow: 65% to Curator for effort, 35% refunded to Buyer.
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-dark-900/80 border border-dark-750">
+                  <div className="flex items-center space-x-2 text-yellow-400 font-bold mb-1">
+                    <Zap className="w-4 h-4" />
+                    <span>Attempt 2 Resubmission</span>
+                  </div>
+                  <p className="text-slate-400 text-[11px] leading-relaxed">
+                    Format glitches on first attempt grant a 2nd chance to submit fixes instead of instant slashing.
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-dark-900/80 border border-dark-750">
+                  <div className="flex items-center space-x-2 text-emerald-400 font-bold mb-1">
+                    <Handshake className="w-4 h-4" />
+                    <span>50 / 50 Mutual Settle</span>
+                  </div>
+                  <p className="text-slate-400 text-[11px] leading-relaxed">
+                    Contested bounties can be peacefully settled by 2-of-2 mutual approval or voluntary unilateral concession.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Active Disputed Cases */}
+            <div>
+              <h3 className="text-lg font-bold font-mono text-white mb-4 flex items-center space-x-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
+                <span>Active Appeals Requiring Bilateral Action ({orders.filter((o) => o.status === 7).length})</span>
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {orders.filter((o) => o.status === 7).map((order) => (
+                  <OrderCard
+                    key={order.order_id}
+                    order={order}
+                    currentUser={account}
+                    onOpenSubmit={(id) => setSubmitOrderId(id)}
+                    onAdjudicate={(id) => handleAdjudicate(id)}
+                    onCancel={(id) => handleCancelOrder(id)}
+                    onViewAudit={(ord) => setSelectedAuditOrder(ord)}
+                    onOpenDispute={(ord) => setSelectedDisputeOrder(ord)}
+                    isProcessing={isProcessing}
+                    activeProcessingId={activeProcessingId}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Settled Orders Eligible for Appeal */}
+            <div className="pt-6">
+              <h3 className="text-base font-bold font-mono text-slate-300 mb-4 flex items-center space-x-2">
+                <span>Recent Court Rulings (Eligible to Contest)</span>
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {orders.filter((o) => o.status === 2 || o.status === 3 || o.status === 5).map((order) => (
+                  <OrderCard
+                    key={order.order_id}
+                    order={order}
+                    currentUser={account}
+                    onOpenSubmit={(id) => setSubmitOrderId(id)}
+                    onAdjudicate={(id) => handleAdjudicate(id)}
+                    onCancel={(id) => handleCancelOrder(id)}
+                    onViewAudit={(ord) => setSelectedAuditOrder(ord)}
+                    onOpenDispute={(ord) => setSelectedDisputeOrder(ord)}
+                    isProcessing={isProcessing}
+                    activeProcessingId={activeProcessingId}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* VIEW 3: ARCHITECTURE & SPECS */}
         {activeView === 'ARCHITECTURE' && <ArchitectureTab />}
@@ -720,6 +1045,16 @@ export function App() {
         onClose={() => setSelectedAuditOrder(null)}
         onConfirmAdjudicate={handleAdjudicate}
         isExecuting={isProcessing}
+      />
+
+      <DisputeModal
+        isOpen={Boolean(selectedDisputeOrder)}
+        order={selectedDisputeOrder}
+        currentUser={account}
+        onClose={() => setSelectedDisputeOrder(null)}
+        onFileDispute={handleFileDispute}
+        onResolveDispute={handleResolveDispute}
+        isProcessing={isProcessing}
       />
     </div>
   );

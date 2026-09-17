@@ -7,12 +7,14 @@ export interface DatasetOrderData {
   escrow_amount: string;
   spec_requirements: string;
   sample_dataset_url: string;
-  status: number; // 0: OPEN, 1: IN_REVIEW, 2: RESOLVED_PAID, 3: RESOLVED_REJECTED, 4: CANCELLED
-  verdict: string; // "PENDING", "DATA_QUALIFIED", "DATA_REJECTED", "CANCELLED"
+  status: number; // 0: OPEN, 1: IN_REVIEW, 2: RESOLVED_PAID, 3: RESOLVED_REJECTED, 4: CANCELLED, 5: RESOLVED_PARTIAL, 6: RETRY, 7: DISPUTED
+  verdict: string; // "PENDING", "DATA_QUALIFIED", "DATA_PARTIAL", "DATA_RETRY", "DATA_REJECTED", "CANCELLED", "DISPUTED"
   reason: string;
   confidence: number;
   schema_score: number;
   quality_score: number;
+  attempts?: number;
+  dispute_approved_by?: string;
   created_at_block: string;
 }
 
@@ -53,37 +55,55 @@ export function getStatusInfo(status: number) {
       return {
         label: 'OPEN',
         desc: 'Awaiting sample deliverable',
-        badgeClass: 'bg-primary-500/10 text-primary-400 border-primary-500/30',
+        badgeClass: 'bg-cyan-500/10 text-cyan-300 border-cyan-400/40 shadow-[0_0_10px_rgba(0,229,255,0.2)]',
       };
     case 1:
       return {
         label: 'IN REVIEW',
-        desc: 'Sample submitted, awaiting AI jury',
-        badgeClass: 'bg-accent-amber/10 text-accent-amber border-accent-amber/30',
+        desc: 'Sample submitted, ready for AI jury',
+        badgeClass: 'bg-amber-500/10 text-amber-300 border-amber-400/40 shadow-[0_0_10px_rgba(245,158,11,0.2)]',
       };
     case 2:
       return {
         label: 'QUALIFIED',
-        desc: 'Escrow released to provider',
-        badgeClass: 'bg-accent-emerald/10 text-accent-emerald border-accent-emerald/30',
+        desc: '100% Escrow released to provider',
+        badgeClass: 'bg-emerald-500/10 text-emerald-300 border-emerald-400/40 shadow-[0_0_10px_rgba(16,185,129,0.2)]',
       };
     case 3:
       return {
         label: 'REJECTED',
-        desc: 'Failed rubric, escrow refunded',
-        badgeClass: 'bg-accent-rose/10 text-accent-rose border-accent-rose/30',
+        desc: 'Failed rubric, 100% refunded to buyer',
+        badgeClass: 'bg-rose-500/10 text-rose-300 border-rose-400/40 shadow-[0_0_10px_rgba(244,63,94,0.2)]',
       };
     case 4:
       return {
         label: 'CANCELLED',
         desc: 'Cancelled by buyer, escrow returned',
-        badgeClass: 'bg-slate-700/30 text-slate-400 border-slate-700',
+        badgeClass: 'bg-slate-800 text-slate-400 border-slate-700',
+      };
+    case 5:
+      return {
+        label: 'PARTIAL SPLIT',
+        desc: 'Fair quality split (65% provider / 35% buyer)',
+        badgeClass: 'bg-purple-500/10 text-purple-300 border-purple-400/40 shadow-[0_0_10px_rgba(168,85,247,0.2)]',
+      };
+    case 6:
+      return {
+        label: 'RETRY GRANTED',
+        desc: 'Curator allowed 2nd attempt to fix formatting',
+        badgeClass: 'bg-yellow-500/10 text-yellow-300 border-yellow-400/40 shadow-[0_0_10px_rgba(234,179,8,0.2)]',
+      };
+    case 7:
+      return {
+        label: 'DISPUTED',
+        desc: 'Bilateral appeal chamber open',
+        badgeClass: 'bg-rose-500/20 text-rose-200 border-rose-400 shadow-[0_0_12px_rgba(244,63,94,0.3)] animate-pulse',
       };
     default:
       return {
         label: 'UNKNOWN',
         desc: 'Unknown state',
-        badgeClass: 'bg-slate-700 text-slate-300 border-slate-600',
+        badgeClass: 'bg-slate-800 text-slate-300 border-slate-700',
       };
   }
 }

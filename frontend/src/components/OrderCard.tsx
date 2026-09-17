@@ -19,6 +19,7 @@ interface OrderCardProps {
   onAdjudicate: (orderId: string) => void;
   onCancel: (orderId: string) => void;
   onViewAudit: (order: DatasetOrderData) => void;
+  onOpenDispute: (order: DatasetOrderData) => void;
   isProcessing: boolean;
   activeProcessingId: string | null;
 }
@@ -30,11 +31,13 @@ export const OrderCard: React.FC<OrderCardProps> = ({
   onAdjudicate,
   onCancel,
   onViewAudit,
+  onOpenDispute,
   isProcessing,
   activeProcessingId,
 }) => {
   const statusInfo = getStatusInfo(order.status);
   const isBuyer = currentUser && order.buyer.toLowerCase() === currentUser.toLowerCase();
+  const isProvider = currentUser && order.provider.toLowerCase() === currentUser.toLowerCase();
   const isBusy = isProcessing && activeProcessingId === order.order_id;
 
   const isCode = order.spec_requirements.toLowerCase().includes('code') || order.spec_requirements.toLowerCase().includes('python');
@@ -49,6 +52,12 @@ export const OrderCard: React.FC<OrderCardProps> = ({
             ? 'bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500 shadow-[0_0_15px_#10b981]'
             : order.status === 3
             ? 'bg-gradient-to-r from-rose-500 via-red-400 to-rose-500 shadow-[0_0_15px_#f43f5e]'
+            : order.status === 5
+            ? 'bg-gradient-to-r from-purple-500 via-indigo-400 to-purple-500 shadow-[0_0_15px_#a855f7]'
+            : order.status === 6
+            ? 'bg-gradient-to-r from-yellow-500 via-amber-400 to-yellow-500 shadow-[0_0_15px_#eab308]'
+            : order.status === 7
+            ? 'bg-gradient-to-r from-rose-600 via-amber-500 to-rose-600 shadow-[0_0_20px_#f43f5e] animate-pulse'
             : order.status === 1
             ? 'bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 shadow-[0_0_15px_#f59e0b]'
             : 'bg-gradient-to-r from-cyan-500 via-blue-500 to-cyan-500 shadow-[0_0_15px_#00e5ff]'
@@ -82,7 +91,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
             {isCode ? 'Code Benchmark' : isMedical ? 'BioMed QA' : 'LLM Instruction'}
           </span>
           <span className="text-slate-500 font-mono">
-            Block #{order.created_at_block}
+            {order.attempts ? `Attempt ${order.attempts}/2 • ` : ''}Block #{order.created_at_block}
           </span>
         </div>
 
@@ -112,6 +121,14 @@ export const OrderCard: React.FC<OrderCardProps> = ({
           </div>
         )}
 
+        {/* Two-Sided Reason / Split Info Banner if applicable */}
+        {order.status === 5 && (
+          <div className="mb-4 p-2.5 rounded-xl bg-purple-500/15 border border-purple-500/30 text-[11px] font-mono text-purple-200 flex items-center justify-between">
+            <span>⚖️ 65% Curator ({(Number(formatGen(order.escrow_amount)) * 0.65).toFixed(2)} GEN)</span>
+            <span>35% Buyer ({(Number(formatGen(order.escrow_amount)) * 0.35).toFixed(2)} GEN)</span>
+          </div>
+        )}
+
         {/* Counterparties */}
         <div className="grid grid-cols-2 gap-3 text-xs border-t border-dark-750/70 pt-3.5 mb-5 font-mono">
           <div className="bg-dark-900/60 p-2.5 rounded-xl border border-dark-750">
@@ -123,7 +140,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
           <div className="bg-dark-900/60 p-2.5 rounded-xl border border-dark-750">
             <span className="text-slate-500 block text-[10px] uppercase font-bold">Curator (Provider)</span>
             <span className="text-slate-200 truncate block font-bold mt-0.5">
-              {shortenAddress(order.provider)}
+              {shortenAddress(order.provider)} {isProvider && '(You)'}
             </span>
           </div>
         </div>
@@ -169,32 +186,76 @@ export const OrderCard: React.FC<OrderCardProps> = ({
           </button>
         )}
 
-        {/* Status 2: QUALIFIED or Status 3: REJECTED */}
-        {(order.status === 2 || order.status === 3) && (
-          <div className="w-full flex items-center justify-between">
-            <div className="flex items-center space-x-2">
+        {/* Status 2: QUALIFIED, Status 3: REJECTED, Status 5: PARTIAL_SPLIT */}
+        {(order.status === 2 || order.status === 3 || order.status === 5) && (
+          <div className="w-full flex items-center justify-between gap-2">
+            <div className="flex items-center space-x-1.5 truncate">
               {order.status === 2 ? (
-                <CheckCircle className="w-5 h-5 text-emerald-400 drop-shadow-[0_0_8px_#10b981]" />
+                <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0 drop-shadow-[0_0_8px_#10b981]" />
+              ) : order.status === 5 ? (
+                <Scale className="w-4 h-4 text-purple-400 flex-shrink-0 drop-shadow-[0_0_8px_#a855f7]" />
               ) : (
-                <AlertTriangle className="w-5 h-5 text-rose-400 drop-shadow-[0_0_8px_#f43f5e]" />
+                <AlertTriangle className="w-4 h-4 text-rose-400 flex-shrink-0 drop-shadow-[0_0_8px_#f43f5e]" />
               )}
               <span
-                className={`text-xs font-mono font-black tracking-wide ${
-                  order.status === 2 ? 'text-emerald-400' : 'text-rose-400'
+                className={`text-[11px] font-mono font-black tracking-wide truncate ${
+                  order.status === 2
+                    ? 'text-emerald-400'
+                    : order.status === 5
+                    ? 'text-purple-400'
+                    : 'text-rose-400'
                 }`}
               >
                 {order.verdict}
               </span>
             </div>
 
+            <div className="flex items-center space-x-2 flex-shrink-0">
+              <button
+                onClick={() => onOpenDispute(order)}
+                title="File bilateral appeal against verdict"
+                className="px-2.5 py-1.5 rounded-xl border border-amber-500/30 text-amber-300 hover:text-white hover:bg-amber-500/20 text-[11px] font-mono font-bold transition"
+              >
+                Appeal
+              </button>
+              <button
+                onClick={() => onViewAudit(order)}
+                className="btn-cyber-outline px-3 py-1.5 rounded-xl text-[11px] font-mono font-bold flex items-center space-x-1 cursor-pointer"
+              >
+                <span>Audit</span>
+                <ArrowRight className="w-3 h-3" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Status 6: RETRY_GRANTED */}
+        {order.status === 6 && (
+          <div className="w-full flex items-center justify-between gap-2">
+            <div className="flex items-center space-x-1.5 text-yellow-400 text-xs font-mono font-bold">
+              <Zap className="w-4 h-4 animate-bounce" />
+              <span>Retry Attempt 2/2</span>
+            </div>
             <button
-              onClick={() => onViewAudit(order)}
-              className="btn-cyber-outline px-4 py-2 rounded-2xl text-xs font-mono font-bold flex items-center space-x-1.5 cursor-pointer"
+              onClick={() => onOpenSubmit(order.order_id)}
+              disabled={isBusy}
+              className="btn-vip-pro px-4 py-2 rounded-xl text-xs uppercase tracking-wider flex items-center space-x-1.5 cursor-pointer"
             >
-              <span>Court Audit</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <UploadCloud className="w-3.5 h-3.5" />
+              <span>Resubmit Fix</span>
             </button>
           </div>
+        )}
+
+        {/* Status 7: DISPUTED */}
+        {order.status === 7 && (
+          <button
+            onClick={() => onOpenDispute(order)}
+            className="w-full py-2.5 rounded-2xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400 text-amber-300 font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center space-x-2 shadow-[0_0_20px_rgba(245,158,11,0.3)] transition cursor-pointer"
+          >
+            <Scale className="w-4 h-4 animate-pulse text-amber-400" />
+            <span>Enter Bilateral Dispute Chamber</span>
+          </button>
         )}
 
         {/* Status 4: CANCELLED */}
