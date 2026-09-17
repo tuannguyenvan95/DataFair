@@ -49,12 +49,32 @@ export function App() {
   // Active View Tab: 100% On-Chain, No Mocks
   const [activeView, setActiveView] = useState<'TERMINAL' | 'DISPUTES' | 'ABOUT' | 'ARCHITECTURE'>('TERMINAL');
 
-  // 100% On-Chain State: Initialized empty, loaded directly from contract
-  const [orders, setOrders] = useState<DatasetOrderData[]>([]);
-  const [stats, setStats] = useState<ContractStats | null>({
-    total_orders: 0,
-    total_escrow_locked: '0',
-    total_orders_settled: 0,
+  // 100% On-Chain State: Initialized with cached storage and synced live from contract
+  const [orders, setOrders] = useState<DatasetOrderData[]>(() => {
+    try {
+      const cached = localStorage.getItem('datafair_cached_orders');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [stats, setStats] = useState<ContractStats | null>(() => {
+    try {
+      const cached = localStorage.getItem('datafair_cached_stats');
+      return cached
+        ? JSON.parse(cached)
+        : {
+            total_orders: 0,
+            total_escrow_locked: '0',
+            total_orders_settled: 0,
+          };
+    } catch {
+      return {
+        total_orders: 0,
+        total_escrow_locked: '0',
+        total_orders_settled: 0,
+      };
+    }
   });
 
   const [loading, setLoading] = useState<boolean>(false);
@@ -116,61 +136,94 @@ export function App() {
   };
 
   // Fetch Contract Data
-  const loadContractData = useCallback(async () => {
-    if (!CONTRACT_ADDRESS || CONTRACT_ADDRESS === '0x0000000000000000000000000000000000000000') {
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const client = getGenLayerClient();
-
-      const rawStats = await client.readContract({
-        address: CONTRACT_ADDRESS,
-        functionName: 'get_stats',
-        args: [],
-      });
-      if (rawStats) {
-        const parsed = typeof rawStats === 'string' ? JSON.parse(rawStats) : rawStats;
-        setStats(parsed);
+  const loadContractData = useCallback(
+    async (isSilent = false) => {
+      if (!CONTRACT_ADDRESS || CONTRACT_ADDRESS === '0x0000000000000000000000000000000000000000') {
+        return;
       }
 
-      const count = await client.readContract({
-        address: CONTRACT_ADDRESS,
-        functionName: 'get_order_count',
-        args: [],
-      });
+      if (!isSilent && orders.length === 0) {
+        setLoading(true);
+      }
 
-      const orderCount = Number(count || 0);
-      const loadedOrders: DatasetOrderData[] = [];
+      try {
+        const client = getGenLayerClient();
 
-      for (let i = 0; i < orderCount; i++) {
-        const orderId = await client.readContract({
-          address: CONTRACT_ADDRESS,
-          functionName: 'get_order_id_by_index',
-          args: [i],
-        });
-
-        const rawOrder = await client.readContract({
-          address: CONTRACT_ADDRESS,
-          functionName: 'get_order',
-          args: [orderId],
-        });
-
-        if (rawOrder) {
-          const parsedOrder = typeof rawOrder === 'string' ? JSON.parse(rawOrder) : rawOrder;
-          loadedOrders.push(parsedOrder);
+        // 1. Fetch Stats safely
+        try {
+          const rawStats = await client.readContract({
+            address: CONTRACT_ADDRESS,
+            functionName: 'get_stats',
+            args: [],
+          });
+          if (rawStats) {
+            const parsed = typeof rawStats === 'string' ? JSON.parse(rawStats) : rawStats;
+            setStats(parsed);
+            try {
+              localStorage.setItem('datafair_cached_stats', JSON.stringify(parsed));
+            } catch {}
+          }
+        } catch (statsErr) {
+          console.warn('Stats fetch warning:', statsErr);
         }
-      }
 
-      setOrders(loadedOrders.reverse());
-    } catch (err) {
-      console.warn('Live contract read result:', err);
-      setOrders([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+        // 2. Fetch Order Count
+        const count = await client.readContract({
+          address: CONTRACT_ADDRESS,
+          functionName: 'get_order_count',
+          args: [],
+        });
+
+        const orderCount = Number(count || 0);
+        if (orderCount === 0) {
+          setOrders([]);
+          try {
+            localStorage.removeItem('datafair_cached_orders');
+          } catch {}
+          return;
+        }
+
+        // 3. Fetch each order
+        const loadedOrders: DatasetOrderData[] = [];
+        for (let i = 0; i < orderCount; i++) {
+          try {
+            const orderId = await client.readContract({
+              address: CONTRACT_ADDRESS,
+              functionName: 'get_order_id_by_index',
+              args: [i],
+            });
+
+            const rawOrder = await client.readContract({
+              address: CONTRACT_ADDRESS,
+              functionName: 'get_order',
+              args: [orderId],
+            });
+
+            if (rawOrder) {
+              const parsedOrder = typeof rawOrder === 'string' ? JSON.parse(rawOrder) : rawOrder;
+              loadedOrders.push(parsedOrder);
+            }
+          } catch (itemErr) {
+            console.warn(`Order index ${i} read failed:`, itemErr);
+          }
+        }
+
+        if (loadedOrders.length > 0) {
+          const reversed = loadedOrders.reverse();
+          setOrders(reversed);
+          try {
+            localStorage.setItem('datafair_cached_orders', JSON.stringify(reversed));
+          } catch {}
+        }
+      } catch (err) {
+        console.warn('Live contract read temporary hiccup (preserving existing orders):', err);
+        // CRITICAL: NEVER clear orders on transient RPC glitch!
+      } finally {
+        setLoading(false);
+      }
+    },
+    [orders.length]
+  );
 
   useEffect(() => {
     if (window.ethereum) {
@@ -188,13 +241,15 @@ export function App() {
         window.location.reload();
       });
     }
-    loadContractData();
 
-    // Auto-poll contract state every 5s so new tasks appear automatically
+    // Initial fetch (shows loader only if cache is completely empty)
+    loadContractData(false);
+
+    // Auto-poll silently every 8 seconds: no UI flicker, no skeleton flashes
     const pollInterval = setInterval(() => {
-      loadContractData();
+      loadContractData(true);
       if (account) fetchBalance(account);
-    }, 5000);
+    }, 8000);
 
     return () => clearInterval(pollInterval);
   }, [fetchBalance, loadContractData, account]);
