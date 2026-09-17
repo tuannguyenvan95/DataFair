@@ -586,23 +586,23 @@ export function App() {
 
       {/* Top Ticker Marquee HUD */}
       <div className="bg-dark-950/90 border-b border-cyan-500/20 py-1.5 z-40 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between text-[11px] font-mono text-cyan-300/80">
-          <div className="flex items-center space-x-3 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between text-[11px] font-mono text-cyan-300/80 gap-3">
+          <div className="flex items-center space-x-2.5 overflow-hidden whitespace-nowrap">
             <span className="flex items-center space-x-1.5 text-emerald-400 font-bold flex-shrink-0">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
               <span>OPTIMISTIC DEMOCRACY LIVE</span>
             </span>
-            <span className="text-slate-600 hidden md:inline">|</span>
-            <span className="hidden md:inline text-slate-300 truncate">
-              4 LLM Nodes in Active Consensus Pool (Llama-3.3, Mistral, Claude, DeepSeek)
+            <span className="text-slate-600 hidden sm:inline">|</span>
+            <span className="hidden sm:inline text-slate-300 truncate">
+              4 LLM Consensus Nodes
             </span>
-            <span className="text-slate-600 hidden lg:inline">|</span>
-            <span className="hidden lg:inline text-cyan-400">
-              gl.nondet.web.render() Live Stream
+            <span className="text-slate-600 hidden md:inline">|</span>
+            <span className="hidden md:inline text-cyan-400 truncate">
+              gl.nondet.web.render() On-Chain Audit
             </span>
           </div>
 
-          <div className="flex items-center space-x-3 text-[10px] text-slate-400 flex-shrink-0">
+          <div className="flex items-center space-x-3 text-[10px] text-slate-400 flex-shrink-0 whitespace-nowrap">
             {CONTRACT_ADDRESS && CONTRACT_ADDRESS !== '0x0000000000000000000000000000000000000000' && (
               <a
                 href={`https://genlayer-explorer.vercel.app/address/${CONTRACT_ADDRESS}`}
