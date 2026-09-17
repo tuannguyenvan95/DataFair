@@ -3,6 +3,8 @@
 > **Track:** Agentic Economy Infrastructure / Future of Work / Subjective Consensus  
 > **Target Network:** GenLayer Studio Network (**studionet** — Chain ID `61999` / `0xF1EF`)  
 > **Deployment Platform:** [GenLayer Studio](https://studio.genlayer.com)  
+> **GitHub Repository:** [https://github.com/tuannguyenvan95/DataFair](https://github.com/tuannguyenvan95/DataFair)  
+> **Live App (Vercel):** [https://frontend-pink-mu-49.vercel.app](https://frontend-pink-mu-49.vercel.app)  
 > **Explorer:** [GenLayer Explorer](https://genlayer-explorer.vercel.app)
 
 ---
