@@ -15,6 +15,7 @@ import {
   Scale,
   Handshake,
   CheckCircle,
+  ExternalLink,
 } from 'lucide-react';
 import { Navbar } from './components/Navbar';
 import { StatsBar } from './components/StatsBar';
@@ -584,24 +585,42 @@ export function App() {
       <CyberBackground />
 
       {/* Top Ticker Marquee HUD */}
-      <div className="bg-dark-950/90 border-b border-cyan-500/20 py-1.5 px-4 text-[11px] font-mono text-cyan-300/80 flex items-center justify-between z-40 backdrop-blur-md">
-        <div className="flex items-center space-x-3 overflow-hidden">
-          <span className="flex items-center space-x-1 text-emerald-400 font-bold">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-            <span>OPTIMISTIC DEMOCRACY LIVE</span>
-          </span>
-          <span className="text-slate-600 hidden md:inline">|</span>
-          <span className="hidden md:inline text-slate-300">
-            4 LLM Nodes in Active Consensus Pool (Llama-3.3, Mistral, Claude, DeepSeek)
-          </span>
-          <span className="text-slate-600 hidden lg:inline">|</span>
-          <span className="hidden lg:inline text-cyan-400">
-            gl.nondet.web.render() Live Stream
-          </span>
-        </div>
-        <div className="flex items-center space-x-2 text-[10px] text-slate-400">
-          <Activity className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
-          <span>Finality: ~3.2s</span>
+      <div className="bg-dark-950/90 border-b border-cyan-500/20 py-1.5 z-40 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between text-[11px] font-mono text-cyan-300/80">
+          <div className="flex items-center space-x-3 overflow-hidden">
+            <span className="flex items-center space-x-1.5 text-emerald-400 font-bold flex-shrink-0">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+              <span>OPTIMISTIC DEMOCRACY LIVE</span>
+            </span>
+            <span className="text-slate-600 hidden md:inline">|</span>
+            <span className="hidden md:inline text-slate-300 truncate">
+              4 LLM Nodes in Active Consensus Pool (Llama-3.3, Mistral, Claude, DeepSeek)
+            </span>
+            <span className="text-slate-600 hidden lg:inline">|</span>
+            <span className="hidden lg:inline text-cyan-400">
+              gl.nondet.web.render() Live Stream
+            </span>
+          </div>
+
+          <div className="flex items-center space-x-3 text-[10px] text-slate-400 flex-shrink-0">
+            {CONTRACT_ADDRESS && CONTRACT_ADDRESS !== '0x0000000000000000000000000000000000000000' && (
+              <a
+                href={`https://genlayer-explorer.vercel.app/address/${CONTRACT_ADDRESS}`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center space-x-1.5 px-2.5 py-0.5 rounded-lg bg-dark-900 border border-cyan-500/30 text-cyan-300 hover:border-cyan-400 hover:text-white transition font-mono shadow-[0_0_8px_rgba(0,229,255,0.15)] group"
+                title="View contract on GenLayer Explorer"
+              >
+                <span className="text-slate-400">Contract:</span>
+                <span className="text-white font-bold group-hover:text-cyan-300 transition">{shortenAddress(CONTRACT_ADDRESS)}</span>
+                <ExternalLink className="w-3 h-3 text-cyan-400" />
+              </a>
+            )}
+            <div className="flex items-center space-x-1.5">
+              <Activity className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+              <span>Finality: ~3.2s</span>
+            </div>
+          </div>
         </div>
       </div>
 
