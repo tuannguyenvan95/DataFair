@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layers, Lock, CheckCircle2, Cpu, Activity, Zap } from 'lucide-react';
+import { Layers, Lock, CheckCircle2, Cpu, TrendingUp } from 'lucide-react';
 import { ContractStats, formatGen } from '../utils/helpers';
 
 interface StatsBarProps {
@@ -9,87 +9,124 @@ interface StatsBarProps {
 
 export const StatsBar: React.FC<StatsBarProps> = ({ stats, loading }) => {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-      {/* Total Bounties */}
-      <div className="glass-panel rounded-3xl p-5 relative overflow-hidden group hover:border-cyber-blue/50 transition">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+      {/* 1. Total Bounties */}
+      <div className="holo-card rounded-3xl p-6 relative overflow-hidden group">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-mono font-semibold text-slate-400 uppercase tracking-wider">
-            Total Bounties
+          <span className="text-xs font-mono font-bold text-cyan-300/80 uppercase tracking-widest flex items-center space-x-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+            <span>Total Bounties</span>
           </span>
-          <div className="p-2.5 rounded-xl bg-cyber-blue/10 text-cyber-blue border border-cyber-blue/20">
-            <Layers className="w-4 h-4" />
+          <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center text-cyan-400 shadow-[0_0_15px_rgba(0,229,255,0.25)] group-hover:scale-110 transition duration-300">
+            <Layers className="w-5 h-5" />
           </div>
         </div>
-        <div className="mt-3">
-          <p className="text-3xl font-black font-mono text-white tracking-tight">
-            {loading ? '...' : stats ? stats.total_orders : '0'}
-          </p>
-          <p className="text-[11px] text-slate-400 mt-1 font-mono">Dataset procurement orders</p>
+
+        <div className="mt-4 flex items-baseline justify-between">
+          <div>
+            <p className="text-4xl font-black font-mono text-white tracking-tight drop-shadow-[0_2px_10px_rgba(255,255,255,0.2)]">
+              {loading ? '...' : stats ? stats.total_orders : '0'}
+            </p>
+            <p className="text-xs text-slate-400 mt-1 font-mono">Dataset procurement orders</p>
+          </div>
+          {/* Mini Sparkline Chart */}
+          <div className="w-16 h-8 opacity-60 group-hover:opacity-100 transition">
+            <svg viewBox="0 0 60 25" className="w-full h-full stroke-cyan-400 fill-none" strokeWidth="2.5">
+              <path d="M0 20 Q 15 5, 30 15 T 60 4" />
+            </svg>
+          </div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyber-blue/0 via-cyber-blue/40 to-cyber-blue/0 group-hover:via-cyber-blue transition-all"></div>
+
+        {/* Ambient base glow */}
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-50 group-hover:opacity-100 transition duration-500"></div>
       </div>
 
-      {/* Escrow Locked */}
-      <div className="glass-panel rounded-3xl p-5 relative overflow-hidden group hover:border-cyber-neon/50 transition">
+      {/* 2. Escrow Locked */}
+      <div className="holo-card rounded-3xl p-6 relative overflow-hidden group">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-mono font-semibold text-slate-400 uppercase tracking-wider">
-            Escrow Locked
+          <span className="text-xs font-mono font-bold text-blue-300/80 uppercase tracking-widest flex items-center space-x-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span>
+            <span>Escrow Locked</span>
           </span>
-          <div className="p-2.5 rounded-xl bg-primary-500/10 text-primary-400 border border-primary-500/20">
-            <Lock className="w-4 h-4" />
+          <div className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-400/30 flex items-center justify-center text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.25)] group-hover:scale-110 transition duration-300">
+            <Lock className="w-5 h-5" />
           </div>
         </div>
-        <div className="mt-3">
-          <p className="text-3xl font-black font-mono text-white flex items-baseline space-x-1.5 tracking-tight">
-            <span>{loading ? '...' : stats ? formatGen(stats.total_escrow_locked) : '0'}</span>
-            <span className="text-xs font-mono text-cyber-neon">GEN</span>
-          </p>
-          <p className="text-[11px] text-slate-400 mt-1 font-mono">Protected in smart escrow</p>
+
+        <div className="mt-4 flex items-baseline justify-between">
+          <div>
+            <p className="text-4xl font-black font-mono text-white tracking-tight flex items-baseline space-x-1.5 drop-shadow-[0_2px_10px_rgba(255,255,255,0.2)]">
+              <span>{loading ? '...' : stats ? formatGen(stats.total_escrow_locked) : '0'}</span>
+              <span className="text-sm font-mono text-cyan-400 font-bold">GEN</span>
+            </p>
+            <p className="text-xs text-slate-400 mt-1 font-mono">Protected in smart escrow</p>
+          </div>
+          {/* Mini Sparkline Chart */}
+          <div className="w-16 h-8 opacity-60 group-hover:opacity-100 transition">
+            <svg viewBox="0 0 60 25" className="w-full h-full stroke-blue-400 fill-none" strokeWidth="2.5">
+              <path d="M0 18 Q 20 22, 35 10 T 60 2" />
+            </svg>
+          </div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary-500/0 via-primary-500/40 to-primary-500/0 group-hover:via-primary-500 transition-all"></div>
+
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-blue-400 to-transparent opacity-50 group-hover:opacity-100 transition duration-500"></div>
       </div>
 
-      {/* Orders Settled */}
-      <div className="glass-panel rounded-3xl p-5 relative overflow-hidden group hover:border-accent-emerald/50 transition">
+      {/* 3. Settled by Jury */}
+      <div className="holo-card rounded-3xl p-6 relative overflow-hidden group">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-mono font-semibold text-slate-400 uppercase tracking-wider">
-            Settled by Jury
+          <span className="text-xs font-mono font-bold text-emerald-300/80 uppercase tracking-widest flex items-center space-x-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>Settled by Jury</span>
           </span>
-          <div className="p-2.5 rounded-xl bg-accent-emerald/10 text-accent-emerald border border-accent-emerald/20">
-            <CheckCircle2 className="w-4 h-4" />
+          <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-400/30 flex items-center justify-center text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.25)] group-hover:scale-110 transition duration-300">
+            <CheckCircle2 className="w-5 h-5" />
           </div>
         </div>
-        <div className="mt-3">
-          <p className="text-3xl font-black font-mono text-white tracking-tight">
-            {loading ? '...' : stats ? stats.total_orders_settled : '0'}
-          </p>
-          <p className="text-[11px] text-slate-400 mt-1 font-mono">Zero counterparty fraud</p>
+
+        <div className="mt-4 flex items-baseline justify-between">
+          <div>
+            <p className="text-4xl font-black font-mono text-white tracking-tight drop-shadow-[0_2px_10px_rgba(255,255,255,0.2)]">
+              {loading ? '...' : stats ? stats.total_orders_settled : '0'}
+            </p>
+            <p className="text-xs text-slate-400 mt-1 font-mono">Zero counterparty fraud</p>
+          </div>
+          {/* Mini Sparkline Chart */}
+          <div className="w-16 h-8 opacity-60 group-hover:opacity-100 transition">
+            <svg viewBox="0 0 60 25" className="w-full h-full stroke-emerald-400 fill-none" strokeWidth="2.5">
+              <path d="M0 22 Q 15 15, 30 18 T 60 5" />
+            </svg>
+          </div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-accent-emerald/0 via-accent-emerald/40 to-accent-emerald/0 group-hover:via-accent-emerald transition-all"></div>
+
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent opacity-50 group-hover:opacity-100 transition duration-500"></div>
       </div>
 
-      {/* Consensus Engine Status */}
-      <div className="glass-panel rounded-3xl p-5 relative overflow-hidden group hover:border-cyber-purple/50 transition">
+      {/* 4. GenLayer AI Consensus */}
+      <div className="holo-card rounded-3xl p-6 relative overflow-hidden group">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-mono font-semibold text-slate-400 uppercase tracking-wider">
-            GenLayer Jury
+          <span className="text-xs font-mono font-bold text-purple-300/80 uppercase tracking-widest flex items-center space-x-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-ping"></span>
+            <span>Jury Engine</span>
           </span>
-          <div className="p-2.5 rounded-xl bg-cyber-purple/10 text-cyber-purple border border-cyber-purple/20">
-            <Cpu className="w-4 h-4" />
+          <div className="w-10 h-10 rounded-2xl bg-purple-500/10 border border-purple-400/30 flex items-center justify-center text-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.25)] group-hover:scale-110 transition duration-300">
+            <Cpu className="w-5 h-5" />
           </div>
         </div>
-        <div className="mt-3">
+
+        <div className="mt-4">
           <div className="flex items-center space-x-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-accent-emerald animate-pulse"></span>
-            <p className="text-xl font-black font-mono text-slate-100 tracking-tight">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#10b981] animate-pulse"></span>
+            <p className="text-2xl font-black font-mono text-white tracking-tight">
               Optimistic AI
             </p>
           </div>
-          <p className="text-[11px] text-slate-400 mt-1 font-mono">
+          <p className="text-xs text-purple-200/60 mt-1 font-mono">
             Multi-LLM Semantic Equivalence
           </p>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyber-purple/0 via-cyber-purple/40 to-cyber-purple/0 group-hover:via-cyber-purple transition-all"></div>
+
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-purple-400 to-transparent opacity-50 group-hover:opacity-100 transition duration-500"></div>
       </div>
     </div>
   );

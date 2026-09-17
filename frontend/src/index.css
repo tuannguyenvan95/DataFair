@@ -4,13 +4,8 @@
 
 @layer base {
   body {
-    background-color: #030712;
-    background-image: 
-      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(14, 165, 233, 0.15), transparent),
-      radial-gradient(ellipse 60% 40% at 80% 100%, rgba(168, 85, 247, 0.08), transparent),
-      linear-gradient(to bottom, #030712, #070c18 60%, #030712);
-    background-attachment: fixed;
-    color: #f1f5f9;
+    background-color: #02050e;
+    color: #f8fafc;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 }
@@ -21,62 +16,123 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #070c18;
+  background: #040814;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1e2c47;
+  background: #172540;
   border-radius: 9999px;
+  border: 1px solid rgba(0, 229, 255, 0.2);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #38bdf8;
+  background: #00e5ff;
 }
 
-/* High-tech Cyber Grid */
-.cyber-grid {
-  background-size: 40px 40px;
-  background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+/* Holographic & Cyber Text Gradient */
+.text-holo-gradient {
+  background: linear-gradient(135deg, #ffffff 0%, #a5f3fc 30%, #38bdf8 65%, #c084fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-/* Glowing Neon Elements */
-.neon-border-cyan {
-  border: 1px solid rgba(0, 229, 255, 0.3);
-  box-shadow: 0 0 15px -3px rgba(0, 229, 255, 0.15), inset 0 0 15px -3px rgba(0, 229, 255, 0.05);
+.text-cyber-glow {
+  text-shadow: 0 0 20px rgba(0, 229, 255, 0.6), 0 0 40px rgba(0, 229, 255, 0.2);
 }
 
-.neon-border-cyan:hover {
-  border-color: rgba(0, 229, 255, 0.6);
-  box-shadow: 0 0 25px -3px rgba(0, 229, 255, 0.3), inset 0 0 20px -3px rgba(0, 229, 255, 0.1);
+/* Ultra VIP Pro Glowing CTA Button */
+.btn-vip-pro {
+  background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 50%, #8a2387 100%);
+  background-size: 200% 200%;
+  color: #ffffff !important;
+  font-weight: 800;
+  box-shadow: 0 0 25px -3px rgba(0, 210, 255, 0.55), 0 0 50px -10px rgba(138, 35, 135, 0.4);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.neon-border-purple {
-  border: 1px solid rgba(168, 85, 247, 0.3);
-  box-shadow: 0 0 15px -3px rgba(168, 85, 247, 0.15);
+.btn-vip-pro:hover {
+  background-position: right center;
+  box-shadow: 0 0 35px 2px rgba(0, 210, 255, 0.8), 0 0 60px -5px rgba(138, 35, 135, 0.6);
+  transform: translateY(-2px) scale(1.02);
 }
 
-.neon-border-emerald {
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  box-shadow: 0 0 15px -3px rgba(16, 185, 129, 0.15);
+/* Secondary Cyber Button */
+.btn-cyber-outline {
+  background: rgba(8, 15, 30, 0.75);
+  border: 1px solid rgba(0, 229, 255, 0.4);
+  color: #e0f2fe;
+  box-shadow: 0 0 15px -3px rgba(0, 229, 255, 0.2), inset 0 0 15px -3px rgba(0, 229, 255, 0.1);
+  transition: all 0.25s ease;
 }
 
-/* Glass Panels */
-.glass-panel {
-  background: rgba(12, 19, 34, 0.7);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.glass-panel-interactive {
-  background: rgba(12, 19, 34, 0.6);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.glass-panel-interactive:hover {
-  background: rgba(17, 27, 46, 0.85);
-  border-color: rgba(56, 189, 248, 0.4);
+.btn-cyber-outline:hover {
+  background: rgba(14, 28, 56, 0.9);
+  border-color: #00e5ff;
+  color: #ffffff;
+  box-shadow: 0 0 25px -2px rgba(0, 229, 255, 0.5), inset 0 0 20px -2px rgba(0, 229, 255, 0.2);
   transform: translateY(-2px);
+}
+
+/* Holographic Card Container */
+.holo-card {
+  background: linear-gradient(135deg, rgba(13, 22, 42, 0.75) 0%, rgba(7, 12, 24, 0.85) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 229, 255, 0.18);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8), 0 0 20px -5px rgba(0, 229, 255, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.holo-card:hover {
+  border-color: rgba(0, 229, 255, 0.55);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.9), 0 0 30px -2px rgba(0, 229, 255, 0.25);
+  transform: translateY(-4px);
+}
+
+/* Holographic Shine line on hover */
+.holo-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.04),
+    rgba(0, 229, 255, 0.08),
+    transparent
+  );
+  transition: 0.7s;
+  pointer-events: none;
+}
+
+.holo-card:hover::before {
+  left: 100%;
+}
+
+/* Shimmering Badge */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.badge-shimmer {
+  background: linear-gradient(90deg, rgba(0, 229, 255, 0.1) 0%, rgba(0, 229, 255, 0.3) 50%, rgba(0, 229, 255, 0.1) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 3s infinite linear;
+}
+
+/* Neon Pulse Indicator */
+.pulse-beacon {
+  position: relative;
+}
+.pulse-beacon::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0.4;
+  animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
 }

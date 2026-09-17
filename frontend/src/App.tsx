@@ -11,6 +11,7 @@ import {
   ArrowRight,
   ShieldCheck,
   Zap,
+  Activity,
 } from 'lucide-react';
 import { Navbar } from './components/Navbar';
 import { StatsBar } from './components/StatsBar';
@@ -20,6 +21,7 @@ import { SubmitSample } from './components/SubmitSample';
 import { JuryChamberModal } from './components/JuryChamberModal';
 import { DatasetPlayground } from './components/DatasetPlayground';
 import { ArchitectureTab } from './components/ArchitectureTab';
+import { CyberBackground } from './components/CyberBackground';
 import {
   DatasetOrderData,
   ContractStats,
@@ -479,7 +481,32 @@ export function App() {
   });
 
   return (
-    <div className="min-h-screen flex flex-col bg-cyber-grid">
+    <div className="min-h-screen flex flex-col relative text-slate-100 overflow-x-hidden">
+      {/* Background Neural Particle Mesh */}
+      <CyberBackground />
+
+      {/* Top Ticker Marquee HUD */}
+      <div className="bg-dark-950/90 border-b border-cyan-500/20 py-1.5 px-4 text-[11px] font-mono text-cyan-300/80 flex items-center justify-between z-40 backdrop-blur-md">
+        <div className="flex items-center space-x-3 overflow-hidden">
+          <span className="flex items-center space-x-1 text-emerald-400 font-bold">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+            <span>OPTIMISTIC DEMOCRACY LIVE</span>
+          </span>
+          <span className="text-slate-600 hidden md:inline">|</span>
+          <span className="hidden md:inline text-slate-300">
+            4 LLM Nodes in Active Consensus Pool (Llama-3.3, Mistral, Claude, DeepSeek)
+          </span>
+          <span className="text-slate-600 hidden lg:inline">|</span>
+          <span className="hidden lg:inline text-cyan-400">
+            gl.nondet.web.render() Live Stream
+          </span>
+        </div>
+        <div className="flex items-center space-x-2 text-[10px] text-slate-400">
+          <Activity className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+          <span>Finality: ~3.2s</span>
+        </div>
+      </div>
+
       {/* Navigation Bar with View Switcher */}
       <Navbar
         account={account}
@@ -492,13 +519,17 @@ export function App() {
       />
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         {/* Consensus Banner */}
         {isProcessing && consensusMessage && (
-          <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-dark-850 via-dark-800 to-dark-850 border border-cyber-blue/50 shadow-2xl flex items-center space-x-3.5 animate-pulse neon-border-cyan">
-            <Loader2 className="w-5 h-5 text-cyber-blue animate-spin flex-shrink-0" />
-            <div className="flex-1 text-xs sm:text-sm text-slate-200 font-mono">
-              <span className="font-bold text-cyber-blue">GENLAYER JURY ACTIVE: </span>
+          <div className="mb-6 p-5 rounded-3xl bg-dark-900/90 border border-cyan-400 shadow-[0_0_40px_rgba(0,229,255,0.3)] flex items-center space-x-4 animate-pulse">
+            <div className="w-10 h-10 rounded-2xl bg-cyan-500/20 border border-cyan-400 flex items-center justify-center flex-shrink-0">
+              <Loader2 className="w-6 h-6 text-cyan-400 animate-spin" />
+            </div>
+            <div className="flex-1 text-xs sm:text-sm text-white font-mono">
+              <span className="font-bold text-cyan-400 uppercase tracking-wider block mb-0.5">
+                ⚡ GenLayer AI Jury Active:
+              </span>
               {consensusMessage}
             </div>
           </div>
@@ -506,9 +537,9 @@ export function App() {
 
         {/* Error Banner */}
         {txError && (
-          <div className="mb-6 p-4 rounded-2xl bg-accent-rose/10 border border-accent-rose/30 text-accent-rose text-xs flex items-center justify-between font-mono">
+          <div className="mb-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/40 text-rose-300 text-xs flex items-center justify-between font-mono">
             <div className="flex items-center space-x-2">
-              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <AlertCircle className="w-4 h-4 flex-shrink-0 text-rose-400" />
               <span>{txError}</span>
             </div>
             <button
@@ -524,57 +555,63 @@ export function App() {
         {activeView === 'TERMINAL' && (
           <>
             {/* VIP Pro Hero Section */}
-            <div className="mb-8 p-6 sm:p-8 rounded-3xl glass-panel relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-96 h-96 bg-cyber-blue/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="mb-10 p-8 sm:p-10 rounded-3xl holo-card relative overflow-hidden">
+              {/* Radial Background Accent */}
+              <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-cyan-500/15 via-purple-600/10 to-transparent rounded-full blur-3xl pointer-events-none"></div>
 
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 relative z-10">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8 relative z-10">
                 <div className="max-w-3xl">
-                  <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-cyber-blue/10 border border-cyber-blue/30 text-cyber-blue text-xs font-mono font-bold mb-3">
-                    <Sparkles className="w-3.5 h-3.5" />
+                  {/* Badge */}
+                  <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full badge-shimmer border border-cyan-400/40 text-cyan-300 text-xs font-mono font-bold mb-4 shadow-[0_0_15px_rgba(0,229,255,0.2)]">
+                    <Sparkles className="w-4 h-4 text-cyan-400" />
                     <span>SYNTHETIC JURISDICTION FOR AI AGENT DATASETS</span>
                   </div>
-                  <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight font-display">
+
+                  {/* Grand Holographic Title */}
+                  <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight font-display leading-tight text-holo-gradient text-cyber-glow">
                     Autonomous Training Dataset Escrow & Quality Court
                   </h1>
-                  <p className="text-sm text-slate-400 mt-2 leading-relaxed">
+
+                  <p className="text-sm sm:text-base text-slate-300 mt-4 leading-relaxed font-sans font-medium max-w-2xl drop-shadow">
                     AI Trainer Agents lock GEN bounties. Data Curators submit live deliverables. GenLayer's multi-validator AI bồi thẩm đoàn directly fetches files on-chain, audits JSONL schema & semantic depth, and executes instant escrow settlement.
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3">
+                {/* VIP PRO Action Buttons */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 self-start lg:self-center flex-shrink-0">
                   <button
                     onClick={() => setActiveView('PLAYGROUND')}
-                    className="px-5 py-3 rounded-2xl bg-dark-800 hover:bg-dark-750 text-slate-200 border border-dark-700 text-xs font-mono font-bold transition flex items-center space-x-2"
+                    className="btn-cyber-outline px-6 py-3.5 rounded-2xl text-xs font-mono font-bold uppercase tracking-wider flex items-center justify-center space-x-2.5 cursor-pointer"
                   >
-                    <Code2 className="w-4 h-4 text-cyber-blue" />
+                    <Code2 className="w-4 h-4 text-cyan-400" />
                     <span>Pre-Flight Inspector</span>
                   </button>
 
                   <button
                     onClick={() => setIsCreateOpen(true)}
-                    className="px-6 py-3 rounded-2xl bg-gradient-to-r from-primary-600 via-cyber-blue to-accent-cyan hover:opacity-90 text-dark-950 font-black text-xs shadow-xl shadow-cyan-500/20 transition flex items-center space-x-2 font-mono tracking-wide"
+                    className="btn-vip-pro px-7 py-3.5 rounded-2xl text-xs font-mono font-black uppercase tracking-wider flex items-center justify-center space-x-2.5 cursor-pointer shadow-[0_0_35px_rgba(0,229,255,0.6)]"
                   >
-                    <PlusCircle className="w-4 h-4" />
+                    <PlusCircle className="w-5 h-5 text-white" />
                     <span>Create Dataset Bounty</span>
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Metrics HUD */}
+            {/* Metrics HUD with Charts */}
             <StatsBar stats={stats} loading={loading} />
 
-            {/* Filter Tabs */}
-            <div className="flex items-center justify-between border-b border-dark-750 pb-4 mb-6">
-              <div className="flex items-center space-x-2">
+            {/* Filter Tabs with Active Glow */}
+            <div className="flex items-center justify-between border-b border-cyan-500/20 pb-4 mb-8">
+              <div className="flex items-center space-x-2.5">
                 {(['ALL', 'OPEN', 'IN_REVIEW', 'SETTLED'] as const).map((f) => (
                   <button
                     key={f}
                     onClick={() => setFilter(f)}
-                    className={`px-4 py-1.5 rounded-xl text-xs font-mono font-bold transition ${
+                    className={`px-4 py-2 rounded-2xl text-xs font-mono font-bold uppercase tracking-wider transition-all duration-300 ${
                       filter === f
-                        ? 'bg-cyber-blue/15 text-cyber-blue border border-cyber-blue/30 shadow-sm'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-dark-850'
+                        ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-[0_0_15px_rgba(0,229,255,0.4)] scale-105'
+                        : 'text-slate-400 hover:text-white hover:bg-dark-800'
                     }`}
                   >
                     {f.replace('_', ' ')}
@@ -582,12 +619,12 @@ export function App() {
                 ))}
               </div>
 
-              <span className="text-xs font-mono text-slate-500">
+              <span className="text-xs font-mono text-cyan-300/60 font-bold">
                 {filteredOrders.length} {filteredOrders.length === 1 ? 'bounty' : 'bounties'} listed
               </span>
             </div>
 
-            {/* Bounties Grid */}
+            {/* Bounties Grid with Holo-Cards */}
             {filteredOrders.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredOrders.map((order) => (
@@ -605,10 +642,10 @@ export function App() {
                 ))}
               </div>
             ) : (
-              <div className="py-20 text-center border border-dashed border-dark-750 rounded-3xl glass-panel">
-                <Layers className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-                <p className="text-slate-300 font-bold text-sm font-mono">No bounties in this category</p>
-                <p className="text-slate-500 text-xs mt-1 font-mono">
+              <div className="py-24 text-center border border-dashed border-cyan-500/20 rounded-3xl holo-card">
+                <Layers className="w-14 h-14 text-cyan-400/40 mx-auto mb-3 animate-pulse" />
+                <p className="text-white font-bold text-base font-mono">No bounties in this category</p>
+                <p className="text-slate-400 text-xs mt-1 font-mono">
                   Create a new bounty to initiate autonomous dataset escrow.
                 </p>
               </div>
@@ -624,18 +661,20 @@ export function App() {
       </main>
 
       {/* Cyber Footer */}
-      <footer className="border-t border-dark-800 py-6 mt-16 bg-dark-950/80 text-xs text-slate-500 font-mono">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center space-x-2">
-            <span className="w-2 h-2 rounded-full bg-cyber-blue animate-pulse"></span>
-            <span>DataFair Autonomous Court Protocol • Powered by GenLayer Optimistic Democracy</span>
+      <footer className="border-t border-cyan-500/20 py-8 mt-16 bg-dark-950/90 text-xs text-slate-400 font-mono relative z-10 backdrop-blur-xl">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center space-x-2.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#00e5ff] animate-pulse"></span>
+            <span className="text-slate-300 font-bold">DataFair Autonomous Court Protocol</span>
+            <span className="text-slate-600">•</span>
+            <span>GenLayer studionet (Chain 61999)</span>
           </div>
           <div className="flex items-center space-x-6">
             <a
               href="https://github.com/tuannguyenvan95/DataFair"
               target="_blank"
               rel="noreferrer"
-              className="hover:text-cyber-blue transition"
+              className="hover:text-cyan-400 transition"
             >
               GitHub Source
             </a>
@@ -643,7 +682,7 @@ export function App() {
               href="https://studio.genlayer.com"
               target="_blank"
               rel="noreferrer"
-              className="hover:text-cyber-blue transition"
+              className="hover:text-cyan-400 transition"
             >
               GenLayer Studio
             </a>
@@ -651,7 +690,7 @@ export function App() {
               href="https://genlayer-explorer.vercel.app"
               target="_blank"
               rel="noreferrer"
-              className="hover:text-cyber-blue transition"
+              className="hover:text-cyan-400 transition"
             >
               Explorer
             </a>
