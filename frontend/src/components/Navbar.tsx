@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, Wallet, ExternalLink, RefreshCw, LogOut, Scale, Terminal, FileCode2 } from 'lucide-react';
+import { ShieldCheck, Wallet, ExternalLink, RefreshCw, LogOut, Scale, Terminal, FileCode2, Info } from 'lucide-react';
 import { shortenAddress, formatGen } from '../utils/helpers';
 import { CONTRACT_ADDRESS } from '../config/genlayer';
 
@@ -10,8 +10,8 @@ interface NavbarProps {
   onConnect: () => void;
   onDisconnect: () => void;
   onRefresh: () => void;
-  activeView: 'TERMINAL' | 'DISPUTES' | 'ARCHITECTURE';
-  onSelectView: (view: 'TERMINAL' | 'DISPUTES' | 'ARCHITECTURE') => void;
+  activeView: 'TERMINAL' | 'DISPUTES' | 'ABOUT' | 'ARCHITECTURE';
+  onSelectView: (view: 'TERMINAL' | 'DISPUTES' | 'ABOUT' | 'ARCHITECTURE') => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -63,7 +63,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="hidden lg:flex items-center space-x-1.5 p-1.5 rounded-2xl bg-dark-900/90 border border-cyan-500/20 shadow-inner">
           <button
             onClick={() => onSelectView('TERMINAL')}
-            className={`px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider flex items-center space-x-2 transition-all duration-300 ${
+            className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider flex items-center space-x-1.5 transition-all duration-300 ${
               activeView === 'TERMINAL'
                 ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-[0_0_20px_rgba(0,229,255,0.4)] scale-105'
                 : 'text-slate-400 hover:text-white hover:bg-dark-800'
@@ -74,25 +74,36 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
           <button
             onClick={() => onSelectView('DISPUTES')}
-            className={`px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider flex items-center space-x-2 transition-all duration-300 ${
+            className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider flex items-center space-x-1.5 transition-all duration-300 ${
               activeView === 'DISPUTES'
                 ? 'bg-gradient-to-r from-amber-500 to-rose-600 text-white shadow-[0_0_20px_rgba(245,158,11,0.4)] scale-105'
                 : 'text-slate-400 hover:text-white hover:bg-dark-800'
             }`}
           >
             <Scale className="w-3.5 h-3.5" />
-            <span>Court Appeals & Phán Xử</span>
+            <span>Court Appeals</span>
+          </button>
+          <button
+            onClick={() => onSelectView('ABOUT')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider flex items-center space-x-1.5 transition-all duration-300 ${
+              activeView === 'ABOUT'
+                ? 'bg-gradient-to-r from-cyan-500 via-indigo-500 to-purple-600 text-white shadow-[0_0_20px_rgba(168,85,247,0.4)] scale-105'
+                : 'text-slate-400 hover:text-white hover:bg-dark-800'
+            }`}
+          >
+            <Info className="w-3.5 h-3.5" />
+            <span>Thông Tin Dự Án</span>
           </button>
           <button
             onClick={() => onSelectView('ARCHITECTURE')}
-            className={`px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider flex items-center space-x-2 transition-all duration-300 ${
+            className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider flex items-center space-x-1.5 transition-all duration-300 ${
               activeView === 'ARCHITECTURE'
                 ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-[0_0_20px_rgba(0,229,255,0.4)] scale-105'
                 : 'text-slate-400 hover:text-white hover:bg-dark-800'
             }`}
           >
             <FileCode2 className="w-3.5 h-3.5" />
-            <span>Protocol Architecture</span>
+            <span>Kiến Trúc & Specs</span>
           </button>
         </div>
 

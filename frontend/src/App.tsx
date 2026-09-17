@@ -23,6 +23,7 @@ import { CreateOrder } from './components/CreateOrder';
 import { SubmitSample } from './components/SubmitSample';
 import { JuryChamberModal } from './components/JuryChamberModal';
 import { DisputeModal } from './components/DisputeModal';
+import { ProjectInfoTab } from './components/ProjectInfoTab';
 import { ArchitectureTab } from './components/ArchitectureTab';
 import { CyberBackground } from './components/CyberBackground';
 import {
@@ -38,104 +39,20 @@ import {
   switchToStudionet,
 } from './config/genlayer';
 
-// Initial rich sample bounties for immediate interactive testing (including 2-sided fairness examples)
-const SAMPLE_INITIAL_ORDERS: DatasetOrderData[] = [
-  {
-    order_id: 'data-1',
-    buyer: '0x32A4F2e2764a7812586a111a8B8E2A74d0811eE5',
-    provider: '0x9965507D1a55bcC2695C58ba16FB37d819B0A4df',
-    escrow_amount: '3000000000000000000', // 3 GEN
-    spec_requirements: 'Format: JSONL. Medical question-answering dataset. Each entry must have "question", "context", and "evidence_based_answer". Zero hallucinations, strict PubMed guideline citations.',
-    sample_dataset_url: 'https://raw.githubusercontent.com/datasets/medical-qa/main/sample.jsonl',
-    status: 2, // RESOLVED_PAID
-    verdict: 'DATA_QUALIFIED',
-    reason: 'Verified 50 sample clinical QA pairs. 100% compliant with JSONL syntax. References established PubMed guidelines without repetitive hallucinated tokens.',
-    confidence: 96,
-    schema_score: 95,
-    quality_score: 92,
-    attempts: 1,
-    created_at_block: '124',
-  },
-  {
-    order_id: 'data-2',
-    buyer: '0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65',
-    provider: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
-    escrow_amount: '1500000000000000000', // 1.5 GEN
-    spec_requirements: 'Python smart contract auditing benchmark. JSONL with code snippets and labeled vulnerability tags (reentrancy, access control). Must follow PEP8 formatting.',
-    sample_dataset_url: 'https://raw.githubusercontent.com/tatsu-lab/stanford_alpaca/main/alpaca_data.json',
-    status: 1, // IN_REVIEW
-    verdict: 'PENDING',
-    reason: 'Dataset sample submitted. Ready for on-chain AI quality adjudication.',
-    confidence: 0,
-    schema_score: 0,
-    quality_score: 0,
-    attempts: 1,
-    created_at_block: '128',
-  },
-  {
-    order_id: 'data-3',
-    buyer: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
-    provider: '0x0000000000000000000000000000000000000000',
-    escrow_amount: '2000000000000000000', // 2 GEN
-    spec_requirements: 'Financial time-series sentiment analysis. JSONL format with stock ticker, date, news headline, and sentiment score (-1 to 1). At least 5 non-trivial market events.',
-    sample_dataset_url: '',
-    status: 0, // OPEN
-    verdict: 'PENDING',
-    reason: 'Awaiting data provider deliverable sample submission.',
-    confidence: 0,
-    schema_score: 0,
-    quality_score: 0,
-    attempts: 0,
-    created_at_block: '135',
-  },
-  {
-    order_id: 'data-4',
-    buyer: '0x2546BcD3c84621e976D8185a91A922aE77ECEc30',
-    provider: '0xbDA5747bFD65F08deb54cb465eB87D40e51B197E',
-    escrow_amount: '4000000000000000000', // 4 GEN
-    spec_requirements: 'Customer support conversational dialogue multi-turn tree. Must include agent clarification turns and sentiment escalation. Schema: JSONL with roles and timestamps.',
-    sample_dataset_url: 'https://raw.githubusercontent.com/datasets/dialogue-corpus/main/conversations.jsonl',
-    status: 5, // RESOLVED_PARTIAL (65/35 fair split)
-    verdict: 'DATA_PARTIAL',
-    reason: 'Two-sided fair adjudication: Schema is 100% valid but 18% repetitive dialogue turns detected. Partial payout executed: 65% (2.6 GEN) to Curator, 35% (1.4 GEN) refunded to Buyer.',
-    confidence: 91,
-    schema_score: 88,
-    quality_score: 68,
-    attempts: 1,
-    created_at_block: '142',
-  },
-  {
-    order_id: 'data-5',
-    buyer: '0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65',
-    provider: '0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199',
-    escrow_amount: '2500000000000000000', // 2.5 GEN
-    spec_requirements: 'Legal Contract NER Dataset. Tagged entities for Indemnification, Governing Law, and Non-Compete Clauses according to standard CUAD taxonomy.',
-    sample_dataset_url: 'https://raw.githubusercontent.com/datasets/legal-ner/main/cuad_sample.jsonl',
-    status: 7, // DISPUTED
-    verdict: 'DISPUTED',
-    reason: 'Dispute opened by Data Curator: "All statutory clauses were tagged using standard CUAD taxonomy. Flawed parsing caused false penalty."',
-    confidence: 0,
-    schema_score: 82,
-    quality_score: 55,
-    attempts: 1,
-    dispute_approved_by: '0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65',
-    created_at_block: '148',
-  },
-];
-
 export function App() {
   const [account, setAccount] = useState<string | null>(null);
   const [balance, setBalance] = useState<string>('0');
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
 
   // Active View Tab: 100% On-Chain, No Mocks
-  const [activeView, setActiveView] = useState<'TERMINAL' | 'DISPUTES' | 'ARCHITECTURE'>('TERMINAL');
+  const [activeView, setActiveView] = useState<'TERMINAL' | 'DISPUTES' | 'ABOUT' | 'ARCHITECTURE'>('TERMINAL');
 
-  const [orders, setOrders] = useState<DatasetOrderData[]>(SAMPLE_INITIAL_ORDERS);
+  // 100% On-Chain State: Initialized empty, loaded directly from contract
+  const [orders, setOrders] = useState<DatasetOrderData[]>([]);
   const [stats, setStats] = useState<ContractStats | null>({
-    total_orders: 5,
-    total_escrow_locked: '13000000000000000000',
-    total_orders_settled: 2,
+    total_orders: 0,
+    total_escrow_locked: '0',
+    total_orders_settled: 0,
   });
 
   const [loading, setLoading] = useState<boolean>(false);
@@ -212,7 +129,8 @@ export function App() {
         args: [],
       });
       if (rawStats) {
-        setStats(JSON.parse(rawStats as string));
+        const parsed = typeof rawStats === 'string' ? JSON.parse(rawStats) : rawStats;
+        setStats(parsed);
       }
 
       const count = await client.readContract({
@@ -221,7 +139,7 @@ export function App() {
         args: [],
       });
 
-      const orderCount = Number(count);
+      const orderCount = Number(count || 0);
       const loadedOrders: DatasetOrderData[] = [];
 
       for (let i = 0; i < orderCount; i++) {
@@ -238,15 +156,15 @@ export function App() {
         });
 
         if (rawOrder) {
-          loadedOrders.push(JSON.parse(rawOrder as string));
+          const parsedOrder = typeof rawOrder === 'string' ? JSON.parse(rawOrder) : rawOrder;
+          loadedOrders.push(parsedOrder);
         }
       }
 
-      if (loadedOrders.length > 0) {
-        setOrders(loadedOrders.reverse());
-      }
+      setOrders(loadedOrders.reverse());
     } catch (err) {
-      console.warn('Could not read from deployed contract, using demo records:', err);
+      console.warn('Live contract read result:', err);
+      setOrders([]);
     } finally {
       setLoading(false);
     }
@@ -865,12 +783,25 @@ export function App() {
                 ))}
               </div>
             ) : (
-              <div className="py-24 text-center border border-dashed border-cyan-500/20 rounded-3xl holo-card">
-                <Layers className="w-14 h-14 text-cyan-400/40 mx-auto mb-3 animate-pulse" />
-                <p className="text-white font-bold text-base font-mono">No bounties matching this filter</p>
-                <p className="text-slate-400 text-xs mt-1 font-mono">
-                  Create a new bounty or adjust your role / status filter.
+              <div className="py-20 text-center border border-dashed border-cyan-500/30 rounded-3xl holo-card p-8 relative overflow-hidden">
+                <div className="w-16 h-16 rounded-3xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center mx-auto mb-4 text-cyan-400 shadow-[0_0_25px_rgba(0,229,255,0.2)]">
+                  <Layers className="w-8 h-8 animate-pulse" />
+                </div>
+                <h3 className="text-white font-black text-lg font-mono mb-1">
+                  Chưa có nhiệm vụ nào trên On-Chain Contract
+                </h3>
+                <p className="text-cyan-200/70 text-xs max-w-md mx-auto mb-6 font-mono leading-relaxed">
+                  Contract: <span className="text-emerald-400 font-bold">{shortenAddress(CONTRACT_ADDRESS)}</span> (GenLayer studionet • Chain 61999).
+                  <br />
+                  Hãy khởi tạo đơn hàng Escrow đầu tiên để bắt đầu thẩm định và lưu trữ dữ liệu hoàn toàn on-chain!
                 </p>
+                <button
+                  onClick={() => setIsCreateOpen(true)}
+                  className="btn-vip-pro px-8 py-3 rounded-2xl text-xs font-mono font-black uppercase tracking-wider inline-flex items-center space-x-2 shadow-[0_0_30px_rgba(0,229,255,0.5)] cursor-pointer"
+                >
+                  <PlusCircle className="w-4 h-4" />
+                  <span>Tạo Dataset Bounty Đầu Tiên</span>
+                </button>
               </div>
             )}
           </>
@@ -937,22 +868,28 @@ export function App() {
                 <span>Active Appeals Requiring Bilateral Action ({orders.filter((o) => o.status === 7).length})</span>
               </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {orders.filter((o) => o.status === 7).map((order) => (
-                  <OrderCard
-                    key={order.order_id}
-                    order={order}
-                    currentUser={account}
-                    onOpenSubmit={(id) => setSubmitOrderId(id)}
-                    onAdjudicate={(id) => handleAdjudicate(id)}
-                    onCancel={(id) => handleCancelOrder(id)}
-                    onViewAudit={(ord) => setSelectedAuditOrder(ord)}
-                    onOpenDispute={(ord) => setSelectedDisputeOrder(ord)}
-                    isProcessing={isProcessing}
-                    activeProcessingId={activeProcessingId}
-                  />
-                ))}
-              </div>
+              {orders.filter((o) => o.status === 7).length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {orders.filter((o) => o.status === 7).map((order) => (
+                    <OrderCard
+                      key={order.order_id}
+                      order={order}
+                      currentUser={account}
+                      onOpenSubmit={(id) => setSubmitOrderId(id)}
+                      onAdjudicate={(id) => handleAdjudicate(id)}
+                      onCancel={(id) => handleCancelOrder(id)}
+                      onViewAudit={(ord) => setSelectedAuditOrder(ord)}
+                      onOpenDispute={(ord) => setSelectedDisputeOrder(ord)}
+                      isProcessing={isProcessing}
+                      activeProcessingId={activeProcessingId}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="p-10 rounded-2xl border border-dashed border-dark-750 text-center font-mono text-xs text-slate-400 bg-dark-950/60">
+                  Chưa có tranh chấp (dispute) nào đang chờ xử lý trên contract.
+                </div>
+              )}
             </div>
 
             {/* Settled Orders Eligible for Appeal */}
@@ -961,27 +898,36 @@ export function App() {
                 <span>Recent Court Rulings (Eligible to Contest)</span>
               </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {orders.filter((o) => o.status === 2 || o.status === 3 || o.status === 5).map((order) => (
-                  <OrderCard
-                    key={order.order_id}
-                    order={order}
-                    currentUser={account}
-                    onOpenSubmit={(id) => setSubmitOrderId(id)}
-                    onAdjudicate={(id) => handleAdjudicate(id)}
-                    onCancel={(id) => handleCancelOrder(id)}
-                    onViewAudit={(ord) => setSelectedAuditOrder(ord)}
-                    onOpenDispute={(ord) => setSelectedDisputeOrder(ord)}
-                    isProcessing={isProcessing}
-                    activeProcessingId={activeProcessingId}
-                  />
-                ))}
-              </div>
+              {orders.filter((o) => o.status === 2 || o.status === 3 || o.status === 5).length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {orders.filter((o) => o.status === 2 || o.status === 3 || o.status === 5).map((order) => (
+                    <OrderCard
+                      key={order.order_id}
+                      order={order}
+                      currentUser={account}
+                      onOpenSubmit={(id) => setSubmitOrderId(id)}
+                      onAdjudicate={(id) => handleAdjudicate(id)}
+                      onCancel={(id) => handleCancelOrder(id)}
+                      onViewAudit={(ord) => setSelectedAuditOrder(ord)}
+                      onOpenDispute={(ord) => setSelectedDisputeOrder(ord)}
+                      isProcessing={isProcessing}
+                      activeProcessingId={activeProcessingId}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="p-8 rounded-2xl border border-dashed border-dark-750 text-center font-mono text-xs text-slate-500 bg-dark-950/40">
+                  Chưa có phán quyết nào được lưu trữ trên contract.
+                </div>
+              )}
             </div>
           </div>
         )}
 
-        {/* VIEW 3: ARCHITECTURE & SPECS */}
+        {/* VIEW 3: PROJECT INFO / THÔNG TIN DỰ ÁN */}
+        {activeView === 'ABOUT' && <ProjectInfoTab />}
+
+        {/* VIEW 4: ARCHITECTURE & SPECS */}
         {activeView === 'ARCHITECTURE' && <ArchitectureTab />}
       </main>
 
