@@ -37,7 +37,8 @@ export function formatGen(weiString: string | bigint | number): string {
 
 export function parseGenToWei(genAmount: string): bigint {
   try {
-    return parseEther(genAmount);
+    const sanitized = genAmount.replace(',', '.').trim();
+    return parseEther(sanitized);
   } catch (e) {
     return 0n;
   }
