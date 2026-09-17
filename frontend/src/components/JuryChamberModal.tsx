@@ -58,9 +58,14 @@ export const JuryChamberModal: React.FC<JuryChamberModalProps> = ({
 
   if (!isOpen || !order) return null;
 
-  const isQualified = order.verdict === 'DATA_QUALIFIED';
-  const isRejected = order.verdict === 'DATA_REJECTED';
-  const isSettled = isQualified || isRejected;
+  const isQualified = order.verdict === 'DATA_QUALIFIED' || order.status === 2;
+  const isRejected = order.verdict === 'DATA_REJECTED' || order.status === 3;
+  const isPartial = order.verdict === 'DATA_PARTIAL' || order.status === 5;
+  const isRetry = order.verdict === 'DATA_RETRY' || order.status === 6;
+  const isDisputed = order.status === 7;
+  const isConceded = order.verdict === 'BUYER_CONCEDED' || order.verdict === 'PROVIDER_CONCEDED';
+  const isMutualSplit = order.verdict === 'MUTUAL_SPLIT';
+  const isSettled = isQualified || isRejected || isPartial || isConceded || isMutualSplit;
 
   // Multi-validator jury simulated telemetry
   const jurorNodes: JurorNode[] = [
@@ -214,8 +219,14 @@ export const JuryChamberModal: React.FC<JuryChamberModalProps> = ({
                 className={`p-5 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-4 relative overflow-hidden ${
                   isQualified
                     ? 'bg-accent-emerald/10 border-accent-emerald/40 text-accent-emerald'
+                    : isPartial
+                    ? 'bg-purple-500/10 border-purple-500/40 text-purple-300'
+                    : isRetry
+                    ? 'bg-yellow-500/10 border-yellow-500/40 text-yellow-300'
                     : isRejected
                     ? 'bg-accent-rose/10 border-accent-rose/40 text-accent-rose'
+                    : isDisputed
+                    ? 'bg-amber-500/10 border-amber-500/40 text-amber-300'
                     : 'bg-dark-800/80 border-dark-700 text-slate-300'
                 }`}
               >
@@ -224,14 +235,25 @@ export const JuryChamberModal: React.FC<JuryChamberModalProps> = ({
                     className={`w-14 h-14 rounded-2xl flex items-center justify-center border shadow-lg ${
                       isQualified
                         ? 'bg-accent-emerald/20 border-accent-emerald/50'
+                        : isPartial
+                        ? 'bg-purple-500/20 border-purple-500/50 text-purple-300'
+                        : isRetry
+                        ? 'bg-yellow-500/20 border-yellow-500/50 text-yellow-300'
                         : isRejected
                         ? 'bg-accent-rose/20 border-accent-rose/50'
+                        : isDisputed
+                        ? 'bg-amber-500/20 border-amber-500/50 text-amber-300'
                         : 'bg-dark-700 border-dark-600'
                     }`}
                   >
                     {isQualified && <CheckCircle2 className="w-8 h-8" />}
+                    {isPartial && <Scale className="w-8 h-8 text-purple-400" />}
+                    {isRetry && <Zap className="w-8 h-8 text-yellow-400" />}
                     {isRejected && <XCircle className="w-8 h-8" />}
-                    {!isQualified && !isRejected && <Cpu className="w-8 h-8 text-primary-400" />}
+                    {isDisputed && <Scale className="w-8 h-8 text-amber-400" />}
+                    {!isQualified && !isPartial && !isRetry && !isRejected && !isDisputed && (
+                      <Cpu className="w-8 h-8 text-primary-400" />
+                    )}
                   </div>
 
                   <div>
@@ -241,11 +263,19 @@ export const JuryChamberModal: React.FC<JuryChamberModalProps> = ({
                     <span className="text-2xl font-black font-mono tracking-wide">
                       {order.verdict}
                     </span>
-                    <p className="text-xs text-slate-400 mt-0.5">
+                    <p className="text-xs text-slate-400 mt-0.5 max-w-md">
                       {isQualified
-                        ? 'Dataset certified. Escrow automatically paid to provider.'
+                        ? 'Dataset certified. 100% escrow automatically paid to Data Curator.'
+                        : isPartial
+                        ? 'Bilateral 65/35 Fair Split: 65% paid to Curator, 35% refunded to Buyer for minor spec variances.'
+                        : isRetry
+                        ? 'Grace Period Granted: Curator allowed 1 retry attempt to fix syntax/fetch issues without losing bounty.'
+                        : isConceded
+                        ? 'Dispute Settled: Resolved via unilateral concession between counterparties.'
+                        : isMutualSplit
+                        ? 'Dispute Settled: 50/50 mutual split approved by both parties.'
                         : isRejected
-                        ? 'Quality audit failed. 100% escrow refunded to buyer.'
+                        ? 'Quality audit failed. 100% escrow refunded to Buyer.'
                         : 'Order currently awaiting AI Jury evaluation.'}
                     </p>
                   </div>
@@ -258,6 +288,16 @@ export const JuryChamberModal: React.FC<JuryChamberModalProps> = ({
                   <span className="text-lg font-bold font-mono text-white">
                     {formatGen(order.escrow_amount)} GEN
                   </span>
+                  {isPartial && (
+                    <span className="block text-[10px] font-mono text-purple-300 mt-0.5">
+                      Curator: {(Number(formatGen(order.escrow_amount)) * 0.65).toFixed(2)} | Buyer: {(Number(formatGen(order.escrow_amount)) * 0.35).toFixed(2)}
+                    </span>
+                  )}
+                  {isMutualSplit && (
+                    <span className="block text-[10px] font-mono text-cyan-300 mt-0.5">
+                      50% Curator | 50% Buyer
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -333,6 +373,28 @@ export const JuryChamberModal: React.FC<JuryChamberModalProps> = ({
                 </div>
                 <div className="bg-dark-900 border border-dark-700 p-4 rounded-xl text-sm font-mono text-slate-200 leading-relaxed">
                   {order.reason}
+                </div>
+              </div>
+
+              {/* Bilateral Fair Play Safeguards Explainer */}
+              <div className="bg-dark-850/80 border border-dark-750 p-5 rounded-2xl">
+                <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-300 mb-3 flex items-center space-x-2">
+                  <ShieldCheck className="w-4 h-4 text-cyan-400" />
+                  <span>GenLayer Bilateral Fair Play Safeguards</span>
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px] font-mono">
+                  <div className="bg-dark-900/80 p-3.5 rounded-xl border border-dark-750">
+                    <span className="text-emerald-400 font-bold block mb-1">🛡️ For Model Trainers (Buyers)</span>
+                    <p className="text-slate-300 leading-relaxed">
+                      Escrow is locked in the on-chain smart contract. 100% automatic refund if deliverable fails quality checks (&lt;60%) or contains spam. Unilateral cancel & refund permitted anytime before curator claims.
+                    </p>
+                  </div>
+                  <div className="bg-dark-900/80 p-3.5 rounded-xl border border-dark-750">
+                    <span className="text-cyan-400 font-bold block mb-1">⚡ For Data Curators (Sellers)</span>
+                    <p className="text-slate-300 leading-relaxed">
+                      Anti-exploitation protection: 65% compensation payout if work meets 60–79% rubric standards. Guaranteed 1-time retry window for minor syntax errors. Buyer cannot revoke escrow once deliverable is submitted.
+                    </p>
+                  </div>
                 </div>
               </div>
             </>

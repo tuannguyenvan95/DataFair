@@ -67,7 +67,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
       <div>
         {/* Top Header Row */}
         <div className="flex items-center justify-between gap-2 mb-4">
-          <div className="flex items-center space-x-2.5">
+          <div className="flex items-center space-x-2 flex-wrap gap-y-1">
             <span className="font-mono text-base font-black text-white group-hover:text-cyan-300 transition tracking-wide drop-shadow">
               #{order.order_id}
             </span>
@@ -76,10 +76,25 @@ export const OrderCard: React.FC<OrderCardProps> = ({
             >
               {statusInfo.label}
             </span>
+            {isBuyer && (
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black uppercase tracking-wider bg-purple-500/20 text-purple-300 border border-purple-500/40 flex items-center gap-1 shadow-[0_0_8px_rgba(168,85,247,0.3)]">
+                👑 Your Bounty (Buyer)
+              </span>
+            )}
+            {isProvider && (
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black uppercase tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 flex items-center gap-1 shadow-[0_0_8px_rgba(0,229,255,0.3)]">
+                ⚡ Your Claim (Curator)
+              </span>
+            )}
+            {!isBuyer && !isProvider && (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold uppercase tracking-wider bg-slate-800/80 text-slate-400 border border-slate-700/60">
+                🌐 Open Bounty
+              </span>
+            )}
           </div>
 
           {/* Bounty Tag with Glow */}
-          <div className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-2xl bg-dark-950 border border-cyan-400/40 text-cyan-300 font-mono font-black text-sm shadow-[0_0_15px_rgba(0,229,255,0.2)]">
+          <div className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-2xl bg-dark-950 border border-cyan-400/40 text-cyan-300 font-mono font-black text-sm shadow-[0_0_15px_rgba(0,229,255,0.2)] flex-shrink-0">
             <Coins className="w-4 h-4 text-amber-400 drop-shadow-[0_0_6px_#f59e0b]" />
             <span>{formatGen(order.escrow_amount)} GEN</span>
           </div>
@@ -103,6 +118,19 @@ export const OrderCard: React.FC<OrderCardProps> = ({
           <p className="text-xs text-slate-200 bg-dark-950/85 p-3.5 rounded-2xl border border-dark-750 line-clamp-3 leading-relaxed font-mono shadow-inner">
             {order.spec_requirements}
           </p>
+        </div>
+
+        {/* Bilateral Fair Play Safeguards Bar */}
+        <div className="mb-4 grid grid-cols-3 gap-1.5 text-[10px] font-mono text-center">
+          <div className="bg-dark-950/90 border border-dark-750 px-2 py-1.5 rounded-xl text-slate-400" title="100% Escrow Refund to Buyer if quality fails or spam detected">
+            🛡️ <span className="text-slate-200 font-bold">100% Refund</span> &lt;60%
+          </div>
+          <div className="bg-dark-950/90 border border-purple-500/25 px-2 py-1.5 rounded-xl text-purple-300" title="Curator receives 65% compensation for partial adherence (score 60-79%)">
+            ⚖️ <span className="text-purple-300 font-bold">65/35 Split</span> 60-79%
+          </div>
+          <div className="bg-dark-950/90 border border-yellow-500/25 px-2 py-1.5 rounded-xl text-yellow-300" title="1 Retry grace period granted before any slashing">
+            🔄 <span className="text-yellow-300 font-bold">Grace Retry</span> Att. 2
+          </div>
         </div>
 
         {/* Deliverable Link if available */}
@@ -140,7 +168,9 @@ export const OrderCard: React.FC<OrderCardProps> = ({
           <div className="bg-dark-900/60 p-2.5 rounded-xl border border-dark-750">
             <span className="text-slate-500 block text-[10px] uppercase font-bold">Curator (Provider)</span>
             <span className="text-slate-200 truncate block font-bold mt-0.5">
-              {shortenAddress(order.provider)} {isProvider && '(You)'}
+              {order.provider && order.provider !== '0x0000000000000000000000000000000000000000'
+                ? `${shortenAddress(order.provider)} ${isProvider ? '(You)' : ''}`
+                : 'Unclaimed'}
             </span>
           </div>
         </div>
@@ -151,24 +181,31 @@ export const OrderCard: React.FC<OrderCardProps> = ({
         {/* Status 0: OPEN */}
         {order.status === 0 && (
           <>
-            {isBuyer && (
+            {isBuyer ? (
+              <div className="w-full flex items-center justify-between gap-3">
+                <button
+                  onClick={() => onCancel(order.order_id)}
+                  disabled={isBusy}
+                  className="px-3.5 py-2.5 rounded-2xl text-xs font-mono font-bold text-rose-400 hover:text-white hover:bg-rose-500/20 border border-rose-500/30 transition flex items-center space-x-1.5 disabled:opacity-50 cursor-pointer"
+                  title="Cancel bounty and withdraw 100% escrow"
+                >
+                  <Ban className="w-3.5 h-3.5" />
+                  <span>Cancel & Refund</span>
+                </button>
+                <div className="text-[11px] font-mono text-cyan-300/80 bg-cyan-950/50 border border-cyan-500/30 px-3 py-2 rounded-xl flex items-center space-x-1.5" title="Creators cannot fulfill own bounties">
+                  <span>🛡️ Awaiting Curator</span>
+                </div>
+              </div>
+            ) : (
               <button
-                onClick={() => onCancel(order.order_id)}
+                onClick={() => onOpenSubmit(order.order_id)}
                 disabled={isBusy}
-                className="px-3.5 py-2.5 rounded-2xl text-xs font-mono font-bold text-rose-400 hover:text-white hover:bg-rose-500/20 border border-rose-500/30 transition flex items-center space-x-1.5 disabled:opacity-50 cursor-pointer"
+                className="w-full btn-vip-pro py-2.5 rounded-2xl text-xs uppercase tracking-wider flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer"
               >
-                <Ban className="w-3.5 h-3.5" />
-                <span>Cancel</span>
+                <UploadCloud className="w-4 h-4" />
+                <span>Submit Deliverable (Claim {formatGen(order.escrow_amount)} GEN)</span>
               </button>
             )}
-            <button
-              onClick={() => onOpenSubmit(order.order_id)}
-              disabled={isBusy}
-              className="ml-auto btn-vip-pro px-6 py-2.5 rounded-2xl text-xs uppercase tracking-wider flex items-center space-x-2 disabled:opacity-50 cursor-pointer"
-            >
-              <UploadCloud className="w-4 h-4" />
-              <span>Submit Deliverable</span>
-            </button>
           </>
         )}
 
@@ -234,16 +271,26 @@ export const OrderCard: React.FC<OrderCardProps> = ({
           <div className="w-full flex items-center justify-between gap-2">
             <div className="flex items-center space-x-1.5 text-yellow-400 text-xs font-mono font-bold">
               <Zap className="w-4 h-4 animate-bounce" />
-              <span>Retry Attempt 2/2</span>
+              <span>Grace Retry (Attempt 2/2)</span>
             </div>
-            <button
-              onClick={() => onOpenSubmit(order.order_id)}
-              disabled={isBusy}
-              className="btn-vip-pro px-4 py-2 rounded-xl text-xs uppercase tracking-wider flex items-center space-x-1.5 cursor-pointer"
-            >
-              <UploadCloud className="w-3.5 h-3.5" />
-              <span>Resubmit Fix</span>
-            </button>
+            {isProvider ? (
+              <button
+                onClick={() => onOpenSubmit(order.order_id)}
+                disabled={isBusy}
+                className="btn-vip-pro px-4 py-2 rounded-xl text-xs uppercase tracking-wider flex items-center space-x-1.5 cursor-pointer"
+              >
+                <UploadCloud className="w-3.5 h-3.5" />
+                <span>Resubmit Fix</span>
+              </button>
+            ) : isBuyer ? (
+              <span className="text-[11px] font-mono text-yellow-300/80 bg-yellow-950/40 border border-yellow-500/30 px-3 py-1.5 rounded-xl">
+                Curator Fixing Deliverable
+              </span>
+            ) : (
+              <span className="text-[11px] font-mono text-slate-400 bg-dark-900 border border-dark-750 px-3 py-1.5 rounded-xl">
+                Curator Grace Period Active
+              </span>
+            )}
           </div>
         )}
 
@@ -262,7 +309,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
         {order.status === 4 && (
           <div className="w-full text-center py-2 bg-dark-900 rounded-2xl border border-dark-750">
             <span className="text-xs font-mono text-slate-500 uppercase tracking-widest font-bold">
-              Order Cancelled & Refunded
+              Order Cancelled & Escrow Refunded
             </span>
           </div>
         )}

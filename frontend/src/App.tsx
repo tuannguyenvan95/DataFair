@@ -346,6 +346,12 @@ export function App() {
       return;
     }
 
+    const targetOrder = orders.find((o) => o.order_id === orderId);
+    if (targetOrder && targetOrder.buyer.toLowerCase() === account.toLowerCase()) {
+      setTxError('Role Restriction: Bounty creators cannot submit deliverables to their own bounty. Please switch MetaMask accounts to act as a Data Curator.');
+      return;
+    }
+
     setIsProcessing(true);
     setActiveProcessingId(orderId);
     setConsensusMessage('Recording deliverable URL on-chain...');
@@ -1085,6 +1091,8 @@ export function App() {
       <SubmitSample
         isOpen={Boolean(submitOrderId)}
         orderId={submitOrderId}
+        order={orders.find((o) => o.order_id === submitOrderId) || null}
+        currentUser={account}
         onClose={() => setSubmitOrderId(null)}
         onSubmit={handleSubmitSample}
         isSubmitting={isProcessing}

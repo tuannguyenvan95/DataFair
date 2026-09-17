@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-import { UploadCloud, X, Link2, AlertCircle, FileText } from 'lucide-react';
+import { UploadCloud, X, Link2, AlertCircle, FileText, ShieldAlert } from 'lucide-react';
+import { DatasetOrderData } from '../utils/helpers';
 
 interface SubmitSampleProps {
   isOpen: boolean;
   orderId: string | null;
+  order?: DatasetOrderData | null;
+  currentUser?: string | null;
   onClose: () => void;
   onSubmit: (orderId: string, sampleUrl: string) => Promise<void>;
   isSubmitting: boolean;
@@ -25,6 +28,8 @@ const SAMPLE_DATASET_URLS = [
 export const SubmitSample: React.FC<SubmitSampleProps> = ({
   isOpen,
   orderId,
+  order,
+  currentUser,
   onClose,
   onSubmit,
   isSubmitting,
@@ -34,9 +39,18 @@ export const SubmitSample: React.FC<SubmitSampleProps> = ({
 
   if (!isOpen || !orderId) return null;
 
+  const isBuyer = Boolean(
+    currentUser && order && order.buyer.toLowerCase() === currentUser.toLowerCase()
+  );
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (isBuyer) {
+      setError('Role Restriction: Bounty creators cannot fulfill their own bounties. Please switch accounts.');
+      return;
+    }
 
     const cleanUrl = url.trim();
     if (!cleanUrl.startsWith('http')) {
@@ -73,6 +87,24 @@ export const SubmitSample: React.FC<SubmitSampleProps> = ({
           </div>
         </div>
 
+        {/* Role Restriction Warning if user is the Bounty Creator */}
+        {isBuyer && (
+          <div className="mb-5 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-xs flex items-start space-x-3">
+            <ShieldAlert className="w-5 h-5 flex-shrink-0 text-rose-400 mt-0.5" />
+            <div>
+              <span className="font-bold block text-sm text-white mb-1">
+                ⛔ Role Restriction: Creator Self-Submission Blocked
+              </span>
+              <p className="text-slate-300 leading-relaxed font-mono text-[11px]">
+                You created this bounty as the Buyer. Protocol integrity rules prevent bounty creators from fulfilling or submitting deliverables to their own escrows.
+              </p>
+              <p className="mt-2 text-rose-400 font-bold font-mono text-[11px]">
+                Please switch to a different MetaMask account to participate as an independent Data Curator.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Preset Sample URLs for easy hackathon demo */}
         <div className="mb-5">
           <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center space-x-1 mb-2">
@@ -84,8 +116,9 @@ export const SubmitSample: React.FC<SubmitSampleProps> = ({
               <button
                 key={idx}
                 type="button"
+                disabled={isBuyer}
                 onClick={() => setUrl(s.url)}
-                className="w-full text-left p-3 rounded-xl border border-dark-600 bg-dark-900/50 hover:border-accent-amber/40 hover:bg-dark-700/60 transition group"
+                className="w-full text-left p-3 rounded-xl border border-dark-600 bg-dark-900/50 hover:border-accent-amber/40 hover:bg-dark-700/60 transition group disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <p className="text-xs font-semibold text-slate-200 group-hover:text-accent-amber">
                   {s.name}
@@ -105,10 +138,11 @@ export const SubmitSample: React.FC<SubmitSampleProps> = ({
               <input
                 type="url"
                 required
+                disabled={isBuyer}
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="https://raw.githubusercontent.com/.../data.jsonl"
-                className="w-full bg-dark-900 border border-dark-600 rounded-xl pl-10 pr-4 py-3 text-sm text-white font-mono placeholder-slate-600 focus:outline-none focus:border-accent-amber transition"
+                className="w-full bg-dark-900 border border-dark-600 rounded-xl pl-10 pr-4 py-3 text-sm text-white font-mono placeholder-slate-600 focus:outline-none focus:border-accent-amber transition disabled:opacity-50 disabled:cursor-not-allowed"
               />
               <Link2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
             </div>
@@ -135,10 +169,14 @@ export const SubmitSample: React.FC<SubmitSampleProps> = ({
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-accent-amber to-amber-500 hover:from-amber-500 hover:to-amber-400 text-dark-900 text-sm font-bold shadow-lg shadow-amber-500/20 transition disabled:opacity-50"
+              disabled={isSubmitting || isBuyer}
+              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-accent-amber to-amber-500 hover:from-amber-500 hover:to-amber-400 text-dark-900 text-sm font-bold shadow-lg shadow-amber-500/20 transition disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Confirming in MetaMask...' : 'Submit Deliverable'}
+              {isBuyer
+                ? 'Action Blocked (You are Buyer)'
+                : isSubmitting
+                ? 'Confirming in MetaMask...'
+                : 'Submit Deliverable'}
             </button>
           </div>
         </form>
