@@ -1,0 +1,16 @@
+{
+  "contractName": "DataFair",
+  "targetNetwork": "studionet",
+  "chainId": 61999,
+  "rpcUrl": "https://studio.genlayer.com/api",
+  "explorerUrl": "https://genlayer-explorer.vercel.app",
+  "contractSource": "contracts/contract.py",
+  "deploymentMethod": "GenLayer Studio (https://studio.genlayer.com/contracts)",
+  "instructions": [
+    "1. Open GenLayer Studio at https://studio.genlayer.com/contracts",
+    "2. Copy the content of contracts/contract.py into a new contract file",
+    "3. Click 'Run & Debug', select your funded account, and deploy",
+    "4. Verify the transaction shows Result: SUCCESS",
+    "5. Copy the deployed contract address and set VITE_CONTRACT_ADDRESS in frontend/.env"
+  ]
+}
