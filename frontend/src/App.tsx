@@ -672,7 +672,7 @@ export function App() {
                   </h1>
 
                   <p className="text-sm sm:text-base text-slate-300 mt-4 leading-relaxed font-sans font-medium max-w-2xl drop-shadow">
-                    AI Trainer Agents lock GEN bounties. Data Curators submit live deliverables. GenLayer's multi-validator AI bồi thẩm đoàn directly fetches files on-chain, audits JSONL schema & semantic depth, and executes instant escrow settlement with two-sided fairness protection.
+                    AI Trainer Agents lock GEN bounties. Data Curators submit live deliverables. GenLayer's multi-validator AI Jury directly fetches files on-chain, audits JSONL schema & semantic depth, and executes instant escrow settlement with two-sided fairness protection.
                   </p>
                 </div>
 
@@ -788,26 +788,26 @@ export function App() {
                   <Layers className="w-8 h-8 animate-pulse" />
                 </div>
                 <h3 className="text-white font-black text-lg font-mono mb-1">
-                  Chưa có nhiệm vụ nào trên On-Chain Contract
+                  No Bounties Found on On-Chain Contract
                 </h3>
                 <p className="text-cyan-200/70 text-xs max-w-md mx-auto mb-6 font-mono leading-relaxed">
                   Contract: <span className="text-emerald-400 font-bold">{shortenAddress(CONTRACT_ADDRESS)}</span> (GenLayer studionet • Chain 61999).
                   <br />
-                  Hãy khởi tạo đơn hàng Escrow đầu tiên để bắt đầu thẩm định và lưu trữ dữ liệu hoàn toàn on-chain!
+                  Deploy the first escrow bounty order to initiate autonomous dataset adjudication and settlement directly on-chain!
                 </p>
                 <button
                   onClick={() => setIsCreateOpen(true)}
                   className="btn-vip-pro px-8 py-3 rounded-2xl text-xs font-mono font-black uppercase tracking-wider inline-flex items-center space-x-2 shadow-[0_0_30px_rgba(0,229,255,0.5)] cursor-pointer"
                 >
                   <PlusCircle className="w-4 h-4" />
-                  <span>Tạo Dataset Bounty Đầu Tiên</span>
+                  <span>Create First Dataset Bounty</span>
                 </button>
               </div>
             )}
           </>
         )}
 
-        {/* VIEW 2: COURT APPEALS & PHÁN XỬ CHAMBER */}
+        {/* VIEW 2: COURT APPEALS & ADJUDICATION CHAMBER */}
         {activeView === 'DISPUTES' && (
           <div className="space-y-8 animate-fadeIn">
             {/* Header */}
@@ -820,7 +820,7 @@ export function App() {
                   <span>BILATERAL FAIRNESS & TWO-SIDED JURISDICTION</span>
                 </div>
                 <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight font-display text-cyber-glow">
-                  Court Appeals & Phán Xử Chamber
+                  Court Appeals & Adjudication Chamber
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-300 mt-3 font-mono leading-relaxed">
                   Protecting both parties: prevents buyers from exploiting delivered data without paying, and protects curators against arbitrary automated rejection. Either party can contest AI rulings or ratify mutual settlements.
@@ -887,7 +887,7 @@ export function App() {
                 </div>
               ) : (
                 <div className="p-10 rounded-2xl border border-dashed border-dark-750 text-center font-mono text-xs text-slate-400 bg-dark-950/60">
-                  Chưa có tranh chấp (dispute) nào đang chờ xử lý trên contract.
+                  No active appeals or disputes currently pending on-chain.
                 </div>
               )}
             </div>
@@ -917,14 +917,14 @@ export function App() {
                 </div>
               ) : (
                 <div className="p-8 rounded-2xl border border-dashed border-dark-750 text-center font-mono text-xs text-slate-500 bg-dark-950/40">
-                  Chưa có phán quyết nào được lưu trữ trên contract.
+                  No settled rulings recorded on-chain yet.
                 </div>
               )}
             </div>
           </div>
         )}
 
-        {/* VIEW 3: PROJECT INFO / THÔNG TIN DỰ ÁN */}
+        {/* VIEW 3: PROJECT INFO */}
         {activeView === 'ABOUT' && <ProjectInfoTab />}
 
         {/* VIEW 4: ARCHITECTURE & SPECS */}

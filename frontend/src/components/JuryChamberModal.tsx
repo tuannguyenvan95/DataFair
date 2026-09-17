@@ -189,7 +189,7 @@ export const JuryChamberModal: React.FC<JuryChamberModalProps> = ({
                 : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
-            <span>Validator Bồi Thẩm Đoàn</span>
+            <span>Validator AI Jury</span>
             <span className="w-2 h-2 rounded-full bg-accent-emerald"></span>
           </button>
           <button

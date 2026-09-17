@@ -92,7 +92,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             <Info className="w-3.5 h-3.5" />
-            <span>Thông Tin Dự Án</span>
+            <span>Project Info</span>
           </button>
           <button
             onClick={() => onSelectView('ARCHITECTURE')}
@@ -103,7 +103,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             <FileCode2 className="w-3.5 h-3.5" />
-            <span>Kiến Trúc & Specs</span>
+            <span>Architecture & Specs</span>
           </button>
         </div>
 

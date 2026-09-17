@@ -150,7 +150,7 @@ export const CreateOrder: React.FC<CreateOrderProps> = ({
               className="w-full bg-dark-900 border border-dark-600 rounded-xl p-3.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-primary-500 transition resize-none"
             />
             <p className="text-[11px] text-slate-400 mt-1">
-              The GenLayer AI validator bồi thẩm đoàn will fetch the deliverable on-chain and measure adherence against this prompt.
+              The GenLayer AI validator jury will fetch the deliverable on-chain and measure adherence against this prompt.
             </p>
           </div>
 

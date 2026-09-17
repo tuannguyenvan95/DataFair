@@ -114,23 +114,23 @@ export const ProjectInfoTab: React.FC = () => {
               <AlertTriangle className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-white font-display">Vấn Đề Thực Tế (The Real Dilemma)</h3>
-              <p className="text-xs text-slate-400 font-mono">Bế tắc trong giao dịch dữ liệu AI giữa 2 bên</p>
+              <h3 className="text-lg font-bold text-white font-display">The Core Dilemma in AI Data Markets</h3>
+              <p className="text-xs text-slate-400 font-mono">Counterparty deadlock between AI Trainers and Data Curators</p>
             </div>
           </div>
 
           <div className="space-y-3 text-xs text-slate-300 leading-relaxed font-mono">
             <div className="p-3.5 rounded-2xl bg-dark-950/80 border border-dark-750">
-              <span className="text-rose-400 font-bold block mb-1">1. Nỗi sợ của Bên Mua (Model Trainer):</span>
-              Sợ trả tiền trước nhưng nhận về file rác, dữ liệu hallucination, copy-paste trùng lặp, hoặc format sai cấu trúc JSONL cam kết.
+              <span className="text-rose-400 font-bold block mb-1">1. Buyer's Risk (Model Trainer Agent):</span>
+              Paying upfront risks receiving spam tokens, hallucinated outputs, duplicate rows, or malformed JSONL schemas with zero refund recourse.
             </div>
             <div className="p-3.5 rounded-2xl bg-dark-950/80 border border-dark-750">
-              <span className="text-amber-400 font-bold block mb-1">2. Nỗi sợ của Bên Bán (Data Curator):</span>
-              Sợ gửi link dataset trước thì bên mua sẽ clone về huấn luyện xong rồi quỵt tiền, từ chối thanh toán.
+              <span className="text-amber-400 font-bold block mb-1">2. Curator's Risk (Data Provider Agent):</span>
+              Sharing the full dataset URL upfront risks the buyer cloning the data for model fine-tuning and then refusing to pay.
             </div>
             <div className="p-3.5 rounded-2xl bg-dark-950/80 border border-dark-750">
-              <span className="text-slate-400 font-bold block mb-1">3. Sự bất lực của Solidity & Oracle cũ:</span>
-              Smart contract truyền thống chỉ so sánh được mã băm (hash keccak256/IPFS CID), hoàn toàn mù tịt không thể mở đọc file JSONL/CSV để kiểm tra nội dung.
+              <span className="text-slate-400 font-bold block mb-1">3. Legacy Smart Contract Limitations:</span>
+              Traditional Solidity contracts can only verify cryptographic hashes (keccak256 / IPFS CID). They are completely blind to unstructured file contents and semantic validity.
             </div>
           </div>
         </div>
@@ -142,38 +142,38 @@ export const ProjectInfoTab: React.FC = () => {
               <Scale className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-white font-display">Giải Pháp DataFair Trên GenLayer</h3>
+              <h3 className="text-lg font-bold text-white font-display">The DataFair Solution on GenLayer</h3>
               <p className="text-xs text-cyan-300 font-mono">Autonomous AI Court & Subjective Escrow</p>
             </div>
           </div>
 
           <div className="space-y-3 text-xs text-slate-200 leading-relaxed font-mono">
             <div className="p-3.5 rounded-2xl bg-dark-950/80 border border-cyan-500/20">
-              <span className="text-cyan-300 font-bold block mb-1">✓ Live Web Fetching On-Chain:</span>
-              Contract dùng <code>gl.nondet.web.render</code> trực tiếp kéo raw dataset mẫu từ URL về trên máy ảo GenVM mà không cần oracle trung gian.
+              <span className="text-cyan-300 font-bold block mb-1">✓ Live On-Chain Data Ingestion:</span>
+              The contract utilizes <code>gl.nondet.web.render</code> to fetch sample datasets directly into the GenVM execution environment without third-party oracles.
             </div>
             <div className="p-3.5 rounded-2xl bg-dark-950/80 border border-emerald-500/20">
               <span className="text-emerald-400 font-bold block mb-1">✓ Multi-Validator AI Jury Consensus:</span>
-              Bồi thẩm đoàn AI validators chạy multi-LLMs đồng thuận thẩm định cả cú pháp cấu trúc lẫn chiều sâu tri thức ngữ nghĩa.
+              Decentralized validator nodes execute multi-LLM non-deterministic evaluations to reach consensus on both structural schema and semantic knowledge depth.
             </div>
             <div className="p-3.5 rounded-2xl bg-dark-950/80 border border-purple-500/20">
               <span className="text-purple-300 font-bold block mb-1">✓ Two-Sided Fairness Protection:</span>
-              Cơ chế thanh toán chia phần (65/35), cơ hội Retry sửa lỗi cú pháp lần 2, và phòng kháng cáo song phương giải quyết tranh chấp hòa bình.
+              Features partial payouts (65/35), attempt 2 syntax retry grace periods, and bilateral dispute resolution chambers to ensure neither side can exploit the other.
             </div>
           </div>
         </div>
       </div>
 
-      {/* Section 2: Two-Sided Protection Rules (Bảo vệ quyền lợi 2 bên) */}
+      {/* Section 2: Two-Sided Protection Rules */}
       <div className="holo-card p-8 rounded-3xl border border-cyan-500/20">
         <div className="flex items-center space-x-3 mb-6">
           <Handshake className="w-6 h-6 text-cyan-400" />
           <div>
             <h3 className="text-xl font-bold text-white font-display">
-              Cơ Chế Phán Xử Bảo Vệ Quyền Lợi Song Phương (Two-Sided Protection)
+              Two-Sided Protection Protocol: Protecting Both Counterparties
             </h3>
             <p className="text-xs text-slate-400 font-mono">
-              Học hỏi từ các mô hình Tòa án phi tập trung (DeliverableCourt, GrantAuditor)
+              Architected with decentralized judicial principles (DeliverableCourt & GrantAuditor)
             </p>
           </div>
         </div>
@@ -183,24 +183,24 @@ export const ProjectInfoTab: React.FC = () => {
           <div className="p-5 rounded-2xl bg-dark-900/90 border border-dark-750">
             <div className="flex items-center space-x-2 text-cyan-300 font-bold text-sm mb-3">
               <ShieldCheck className="w-4 h-4 text-cyan-400" />
-              <span>Quyền Lợi & Bảo Vệ Của Bên Mua (Trainer)</span>
+              <span>Buyer Protection (Model Trainer Agent)</span>
             </div>
             <ul className="space-y-2.5 text-xs text-slate-300 font-mono">
               <li className="flex items-start space-x-2">
                 <span className="text-cyan-400 font-bold">•</span>
-                <span><strong>Kiểm định Schema bắt buộc:</strong> Đảm bảo dataset đủ các cột, tags, và đúng định dạng JSONL cam kết.</span>
+                <span><strong>Strict Schema Adjudication:</strong> Enforces JSONL row structure, required keys, and formatting constraints.</span>
               </li>
               <li className="flex items-start space-x-2">
                 <span className="text-cyan-400 font-bold">•</span>
-                <span><strong>Quét sạch Spam & Hallucination:</strong> AI chấm điểm độ đa dạng tri thức (Semantic Diversity Score &ge; 80).</span>
+                <span><strong>Hallucination & Spam Filter:</strong> Evaluates informational density and token diversity (Semantic Diversity Score &ge; 80).</span>
               </li>
               <li className="flex items-start space-x-2">
                 <span className="text-cyan-400 font-bold">•</span>
-                <span><strong>Hoàn tiền 100% khi vi phạm:</strong> Nếu dataset là rác hoặc score &lt; 60, hợp đồng hoàn trả 100% tiền đặt cọc.</span>
+                <span><strong>100% Automatic Refund:</strong> If deliverable fails quality rubric (score &lt; 60), escrow is instantly refunded.</span>
               </li>
               <li className="flex items-start space-x-2">
                 <span className="text-cyan-400 font-bold">•</span>
-                <span><strong>Hủy đơn tự do:</strong> Khi chưa có Curator nào nhận việc nộp bài, Buyer có thể Cancel và rút tiền về ngay lập tức.</span>
+                <span><strong>Unilateral Cancellation:</strong> If no curator claims or submits sample data, the buyer can cancel and reclaim escrow at any time.</span>
               </li>
             </ul>
           </div>
@@ -209,35 +209,35 @@ export const ProjectInfoTab: React.FC = () => {
           <div className="p-5 rounded-2xl bg-dark-900/90 border border-dark-750">
             <div className="flex items-center space-x-2 text-purple-300 font-bold text-sm mb-3">
               <Zap className="w-4 h-4 text-purple-400" />
-              <span>Quyền Lợi & Bảo Vệ Của Bên Bán (Curator)</span>
+              <span>Curator Protection (Data Provider Agent)</span>
             </div>
             <ul className="space-y-2.5 text-xs text-slate-300 font-mono">
               <li className="flex items-start space-x-2">
                 <span className="text-purple-400 font-bold">•</span>
-                <span><strong>Bảo đảm Tiền Khóa Sẵn (Escrow):</strong> Tiền thưởng được khóa trong contract trước khi giao hàng, không sợ Buyer quỵt tiền.</span>
+                <span><strong>Pre-Funded Escrow Guarantee:</strong> Bounties are locked in the smart contract beforehand, eliminating buyer default risk.</span>
               </li>
               <li className="flex items-start space-x-2">
                 <span className="text-purple-400 font-bold">•</span>
-                <span><strong>Chia phần 65/35 khi lỗi nhỏ:</strong> Dữ liệu đạt 60–79 điểm vẫn nhận 65% tiền công, không bị mất trắng.</span>
+                <span><strong>65 / 35 Partial Settlement:</strong> Work scoring 60–79 receives a 65% payout to reward curation effort while compensating the buyer.</span>
               </li>
               <li className="flex items-start space-x-2">
                 <span className="text-purple-400 font-bold">•</span>
-                <span><strong>Cơ hội Retry lần 2:</strong> Lỗi cú pháp dòng JSONL ở lần nộp 1 được cấp quyền nộp bản sửa thay vì bị slash phạt ngay.</span>
+                <span><strong>Attempt 2 Retry Grace:</strong> First-attempt formatting syntax errors grant a 2nd submission opportunity rather than instant slashing.</span>
               </li>
               <li className="flex items-start space-x-2">
                 <span className="text-purple-400 font-bold">•</span>
-                <span><strong>Kháng Cáo Phán Quyết:</strong> Được quyền mở phiên tòa song phương (Dispute Chamber) để phân xử hòa giải 50/50.</span>
+                <span><strong>Bilateral Appeal Chamber:</strong> Either party can contest AI rulings to negotiate a 50/50 mutual split or voluntary concession.</span>
               </li>
             </ul>
           </div>
         </div>
       </div>
 
-      {/* Section 3: Quy trình hoạt động (Execution Workflow) */}
+      {/* Section 3: Execution Workflow */}
       <div className="bg-dark-900/80 border border-dark-750 p-8 rounded-3xl">
         <h3 className="text-lg font-bold text-white font-display mb-6 flex items-center space-x-2">
           <Layers className="w-5 h-5 text-cyan-400" />
-          <span>Quy Trình Hoạt Động Của DataFair (4 Bước Tự Động)</span>
+          <span>DataFair Protocol Execution Pipeline (4 Automated Steps)</span>
         </h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs font-mono">
@@ -245,9 +245,9 @@ export const ProjectInfoTab: React.FC = () => {
             <div className="w-7 h-7 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold mb-2">
               01
             </div>
-            <h4 className="font-bold text-white mb-1">Tạo Bounty Escrow</h4>
+            <h4 className="font-bold text-white mb-1">Lock Escrow Bounty</h4>
             <p className="text-slate-400 leading-relaxed">
-              Trainer đặt cọc GEN qua hàm <code>create_order()</code>, nhập đặc tả tiêu chuẩn và rubrics.
+              Trainer locks GEN via <code>create_order()</code>, specifying rubric constraints and schema expectations.
             </p>
           </div>
 
@@ -255,9 +255,9 @@ export const ProjectInfoTab: React.FC = () => {
             <div className="w-7 h-7 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold mb-2">
               02
             </div>
-            <h4 className="font-bold text-white mb-1">Nộp Sample Dữ Liệu</h4>
+            <h4 className="font-bold text-white mb-1">Submit Sample</h4>
             <p className="text-slate-400 leading-relaxed">
-              Curator nộp link dataset mẫu qua hàm <code>submit_dataset_sample()</code>.
+              Curator commits sample dataset URL via <code>submit_dataset_sample()</code>.
             </p>
           </div>
 
@@ -265,9 +265,9 @@ export const ProjectInfoTab: React.FC = () => {
             <div className="w-7 h-7 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold mb-2">
               03
             </div>
-            <h4 className="font-bold text-white mb-1">AI Phán Quyết On-Chain</h4>
+            <h4 className="font-bold text-white mb-1">AI Jury Adjudication</h4>
             <p className="text-slate-400 leading-relaxed">
-              Validators crawl data qua <code>gl.nondet.web.render</code> và chạy LLM consensus bằng <code>gl.vm.run_nondet</code>.
+              Validators crawl file on-chain via <code>gl.nondet.web.render</code> and reach consensus via <code>gl.vm.run_nondet</code>.
             </p>
           </div>
 
@@ -275,9 +275,9 @@ export const ProjectInfoTab: React.FC = () => {
             <div className="w-7 h-7 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold mb-2">
               04
             </div>
-            <h4 className="font-bold text-white mb-1">Thanh Toán / Phân Xử</h4>
+            <h4 className="font-bold text-white mb-1">Automated Settlement</h4>
             <p className="text-slate-400 leading-relaxed">
-              GEN tự động giải ngân cho Curator, hoàn trả cho Buyer, hoặc mở phòng hòa giải song phương.
+              GEN is automatically released to Curator, refunded to Buyer, or transitioned into bilateral dispute resolution.
             </p>
           </div>
         </div>
