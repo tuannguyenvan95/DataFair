@@ -39,6 +39,7 @@ import {
   getGenLayerClient,
   switchToStudionet,
 } from './config/genlayer';
+import { TransactionStatus } from 'genlayer-js/types';
 
 export function App() {
   const [account, setAccount] = useState<string | null>(null);
@@ -188,7 +189,37 @@ export function App() {
       });
     }
     loadContractData();
-  }, [fetchBalance, loadContractData]);
+
+    // Auto-poll contract state every 5s so new tasks appear automatically
+    const pollInterval = setInterval(() => {
+      loadContractData();
+      if (account) fetchBalance(account);
+    }, 5000);
+
+    return () => clearInterval(pollInterval);
+  }, [fetchBalance, loadContractData, account]);
+
+  // Helper to wait for transaction finality and sync state reliably
+  const syncAfterTx = useCallback(
+    async (client: any, txHash: any) => {
+      try {
+        if (client && txHash) {
+          setConsensusMessage('Awaiting GenLayer consensus finality (~3.2s)...');
+          await client.waitForTransactionReceipt({
+            hash: txHash,
+            status: TransactionStatus.FINALIZED,
+          });
+        }
+      } catch (waitErr) {
+        console.warn('Receipt wait fallback to polling:', waitErr);
+      }
+      await loadContractData();
+      setTimeout(() => loadContractData(), 1200);
+      setTimeout(() => loadContractData(), 3000);
+      setTimeout(() => loadContractData(), 5500);
+    },
+    [loadContractData]
+  );
 
   // Create Order
   const handleCreateOrder = async (specRequirements: string, escrowGen: string) => {
@@ -206,13 +237,13 @@ export function App() {
     try {
       if (CONTRACT_ADDRESS && CONTRACT_ADDRESS !== '0x0000000000000000000000000000000000000000') {
         const client = getGenLayerClient(account as `0x${string}`);
-        await client.writeContract({
+        const txHash = await client.writeContract({
           address: CONTRACT_ADDRESS,
           functionName: 'create_order',
           args: [specRequirements],
           value: weiValue,
         });
-        await loadContractData();
+        await syncAfterTx(client, txHash);
       } else {
         await new Promise((r) => setTimeout(r, 1200));
         const newOrderId = `data-${orders.length + 1}`;
@@ -268,13 +299,13 @@ export function App() {
     try {
       if (CONTRACT_ADDRESS && CONTRACT_ADDRESS !== '0x0000000000000000000000000000000000000000') {
         const client = getGenLayerClient(account as `0x${string}`);
-        await client.writeContract({
+        const txHash = await client.writeContract({
           address: CONTRACT_ADDRESS,
           functionName: 'submit_dataset_sample',
           args: [orderId, sampleUrl],
           value: 0n,
         });
-        await loadContractData();
+        await syncAfterTx(client, txHash);
       } else {
         await new Promise((r) => setTimeout(r, 1000));
         setOrders(
@@ -318,13 +349,13 @@ export function App() {
     try {
       if (CONTRACT_ADDRESS && CONTRACT_ADDRESS !== '0x0000000000000000000000000000000000000000') {
         const client = getGenLayerClient(account as `0x${string}`);
-        await client.writeContract({
+        const txHash = await client.writeContract({
           address: CONTRACT_ADDRESS,
           functionName: 'adjudicate_dataset',
           args: [orderId],
           value: 0n,
         });
-        await loadContractData();
+        await syncAfterTx(client, txHash);
       } else {
         await new Promise((r) => setTimeout(r, 2600));
         const target = orders.find((o) => o.order_id === orderId);
@@ -391,13 +422,13 @@ export function App() {
     try {
       if (CONTRACT_ADDRESS && CONTRACT_ADDRESS !== '0x0000000000000000000000000000000000000000') {
         const client = getGenLayerClient(account as `0x${string}`);
-        await client.writeContract({
+        const txHash = await client.writeContract({
           address: CONTRACT_ADDRESS,
           functionName: 'cancel_order',
           args: [orderId],
           value: 0n,
         });
-        await loadContractData();
+        await syncAfterTx(client, txHash);
       } else {
         await new Promise((r) => setTimeout(r, 1000));
         const target = orders.find((o) => o.order_id === orderId);
@@ -456,13 +487,13 @@ export function App() {
     try {
       if (CONTRACT_ADDRESS && CONTRACT_ADDRESS !== '0x0000000000000000000000000000000000000000') {
         const client = getGenLayerClient(account as `0x${string}`);
-        await client.writeContract({
+        const txHash = await client.writeContract({
           address: CONTRACT_ADDRESS,
           functionName: 'file_dispute',
           args: [orderId, reason],
           value: 0n,
         });
-        await loadContractData();
+        await syncAfterTx(client, txHash);
       } else {
         await new Promise((r) => setTimeout(r, 1200));
         setOrders((prev) =>
@@ -504,13 +535,13 @@ export function App() {
     try {
       if (CONTRACT_ADDRESS && CONTRACT_ADDRESS !== '0x0000000000000000000000000000000000000000') {
         const client = getGenLayerClient(account as `0x${string}`);
-        await client.writeContract({
+        const txHash = await client.writeContract({
           address: CONTRACT_ADDRESS,
           functionName: 'resolve_dispute',
           args: [orderId, settlementType],
           value: 0n,
         });
-        await loadContractData();
+        await syncAfterTx(client, txHash);
       } else {
         await new Promise((r) => setTimeout(r, 1200));
         const target = orders.find((o) => o.order_id === orderId);
