@@ -33,8 +33,12 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Rotating Ambient Ring */}
             <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 opacity-80 blur-sm group-hover:opacity-100 transition duration-500"></div>
             
-            <div className="relative w-12 h-12 rounded-2xl bg-dark-900 border border-cyan-400/50 flex items-center justify-center shadow-[0_0_20px_rgba(0,229,255,0.4)]">
-              <ShieldCheck className="w-7 h-7 text-cyan-400 drop-shadow-[0_0_8px_rgba(0,229,255,0.8)]" />
+            <div className="relative w-12 h-12 rounded-2xl bg-dark-900 border border-cyan-400/50 overflow-hidden flex items-center justify-center shadow-[0_0_20px_rgba(0,229,255,0.5)]">
+              <img
+                src="/logo.jpg"
+                alt="DataFair Holographic Emblem"
+                className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
+              />
             </div>
             <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-dark-950 animate-ping"></span>
             <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-dark-950 shadow-[0_0_8px_#10b981]"></span>
