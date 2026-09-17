@@ -15,8 +15,8 @@ export const STUDIONET_CONFIG = {
   blockExplorerUrls: ['https://genlayer-explorer.vercel.app'],
 };
 
-// Deployed contract address - fallback to placeholder or env var
-export const CONTRACT_ADDRESS = (import.meta.env.VITE_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
+// Deployed contract address on GenLayer studionet (Chain 61999)
+export const CONTRACT_ADDRESS = (import.meta.env.VITE_CONTRACT_ADDRESS || '0x00A7e5110E97bF301Ec58B919af85Ab82C3599cB') as `0x${string}`;
 
 /**
  * Creates a read-only or signer-attached GenLayer client
