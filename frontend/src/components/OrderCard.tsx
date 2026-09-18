@@ -9,6 +9,7 @@ import {
   CheckCircle,
   AlertTriangle,
   Zap,
+  Lock,
 } from 'lucide-react';
 import { DatasetOrderData, formatGen, shortenAddress, getStatusInfo } from '../utils/helpers';
 
@@ -187,10 +188,10 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                   onClick={() => onCancel(order.order_id)}
                   disabled={isBusy}
                   className="px-3.5 py-2.5 rounded-2xl text-xs font-mono font-bold text-rose-400 hover:text-white hover:bg-rose-500/20 border border-rose-500/30 transition flex items-center space-x-1.5 disabled:opacity-50 cursor-pointer"
-                  title="Cancel bounty and withdraw 100% escrow"
+                  title="Only available while Unclaimed. Irrevocably locked once a curator submits to prevent rug pulls."
                 >
                   <Ban className="w-3.5 h-3.5" />
-                  <span>Cancel & Refund</span>
+                  <span>Cancel (Unclaimed Only)</span>
                 </button>
                 <div className="text-[11px] font-mono text-cyan-300/80 bg-cyan-950/50 border border-cyan-500/30 px-3 py-2 rounded-xl flex items-center space-x-1.5" title="Creators cannot fulfill own bounties">
                   <span>🛡️ Awaiting Curator</span>
@@ -211,16 +212,25 @@ export const OrderCard: React.FC<OrderCardProps> = ({
 
         {/* Status 1: IN_REVIEW */}
         {order.status === 1 && (
-          <button
-            onClick={() => onAdjudicate(order.order_id)}
-            disabled={isBusy}
-            className="w-full btn-vip-pro py-3 rounded-2xl text-xs uppercase tracking-wider flex items-center justify-center space-x-2 shadow-[0_0_30px_rgba(0,229,255,0.6)] cursor-pointer disabled:opacity-50"
-          >
-            <Scale className="w-4 h-4 animate-pulse" />
-            <span>
-              {isBusy ? 'AI Jury Adjudicating...' : 'Convene AI Jury (Adjudicate)'}
-            </span>
-          </button>
+          <div className="w-full space-y-2">
+            <div className="w-full p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-mono text-emerald-300 flex items-center justify-between">
+              <span className="flex items-center space-x-1.5">
+                <Lock className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                <span>Escrow Irrevocably Locked (No Refund/Cancel Allowed)</span>
+              </span>
+              <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider bg-emerald-500/20 px-2 py-0.5 rounded">Anti-Rug Protection</span>
+            </div>
+            <button
+              onClick={() => onAdjudicate(order.order_id)}
+              disabled={isBusy}
+              className="w-full btn-vip-pro py-3 rounded-2xl text-xs uppercase tracking-wider flex items-center justify-center space-x-2 shadow-[0_0_30px_rgba(0,229,255,0.6)] cursor-pointer disabled:opacity-50"
+            >
+              <Scale className="w-4 h-4 animate-pulse" />
+              <span>
+                {isBusy ? 'AI Jury Adjudicating...' : 'Convene AI Jury (Adjudicate)'}
+              </span>
+            </button>
+          </div>
         )}
 
         {/* Status 2: QUALIFIED, Status 3: REJECTED, Status 5: PARTIAL_SPLIT */}
