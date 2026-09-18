@@ -100,8 +100,20 @@ const VERIFIED_ONCHAIN_ORDERS_BASELINE: DatasetOrderData[] = [
 ];
 
 export function App() {
-  const [account, setAccount] = useState<string | null>(null);
-  const [balance, setBalance] = useState<string>('0');
+  const [account, setAccount] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem('datafair_connected_account');
+    } catch {
+      return null;
+    }
+  });
+  const [balance, setBalance] = useState<string>(() => {
+    try {
+      return localStorage.getItem('datafair_cached_balance') || '0';
+    } catch {
+      return '0';
+    }
+  });
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
 
   // Active View Tab: 100% On-Chain, No Mocks
@@ -157,10 +169,25 @@ export function App() {
         params: [addr, 'latest'],
       });
       const balanceBigInt = BigInt(balanceHex);
-      setBalance(balanceBigInt.toString());
+      const balanceStr = balanceBigInt.toString();
+      setBalance(balanceStr);
+      try {
+        localStorage.setItem('datafair_cached_balance', balanceStr);
+      } catch {}
     } catch (err) {
       console.error('Error fetching balance:', err);
     }
+  }, []);
+
+  // Disconnect Wallet
+  const handleDisconnect = useCallback(() => {
+    setAccount(null);
+    setBalance('0');
+    try {
+      localStorage.removeItem('datafair_connected_account');
+      localStorage.removeItem('datafair_wallet_connected');
+      localStorage.removeItem('datafair_cached_balance');
+    } catch {}
   }, []);
 
   // Connect MetaMask with auto-switch to studionet
@@ -179,8 +206,13 @@ export function App() {
         method: 'eth_requestAccounts',
       });
       if (accounts && accounts.length > 0) {
-        setAccount(accounts[0]);
-        await fetchBalance(accounts[0]);
+        const activeAddr = accounts[0];
+        setAccount(activeAddr);
+        try {
+          localStorage.setItem('datafair_connected_account', activeAddr);
+          localStorage.setItem('datafair_wallet_connected', 'true');
+        } catch {}
+        await fetchBalance(activeAddr);
       }
     } catch (err: any) {
       console.error('Wallet connection error:', err);
@@ -306,23 +338,83 @@ export function App() {
     }
   }, []);
 
+  // Silently restore session on mount (F5 / page refresh) without opening MetaMask popup
   useEffect(() => {
-    if (window.ethereum) {
-      window.ethereum.on('accountsChanged', (accounts: string[]) => {
-        if (accounts.length > 0) {
-          setAccount(accounts[0]);
-          fetchBalance(accounts[0]);
-        } else {
-          setAccount(null);
-          setBalance('0');
-        }
-      });
+    let isMounted = true;
 
-      window.ethereum.on('chainChanged', () => {
-        window.location.reload();
-      });
+    const checkExistingConnection = async () => {
+      if (!window.ethereum) return;
+
+      const wasConnected = localStorage.getItem('datafair_wallet_connected') === 'true';
+
+      try {
+        // eth_accounts returns currently authorized accounts without prompting the user
+        const accounts = (await window.ethereum.request({ method: 'eth_accounts' })) as string[];
+        if (!isMounted) return;
+
+        if (accounts && accounts.length > 0) {
+          const activeAccount = accounts[0];
+          setAccount(activeAccount);
+          try {
+            localStorage.setItem('datafair_connected_account', activeAccount);
+            localStorage.setItem('datafair_wallet_connected', 'true');
+          } catch {}
+          fetchBalance(activeAccount);
+        } else if (wasConnected) {
+          // If user was recorded as connected but MetaMask is now locked or revoked
+          handleDisconnect();
+        }
+      } catch (err) {
+        console.warn('Silent wallet session check failed:', err);
+      }
+    };
+
+    checkExistingConnection();
+
+    // In case MetaMask extension injects asynchronously
+    if (typeof window !== 'undefined') {
+      window.addEventListener('ethereum#initialized', checkExistingConnection, { once: true });
     }
 
+    // Listen for account and network changes
+    if (window.ethereum) {
+      const handleAccountsChanged = (accounts: string[]) => {
+        if (accounts && accounts.length > 0) {
+          const activeAccount = accounts[0];
+          setAccount(activeAccount);
+          try {
+            localStorage.setItem('datafair_connected_account', activeAccount);
+            localStorage.setItem('datafair_wallet_connected', 'true');
+          } catch {}
+          fetchBalance(activeAccount);
+        } else {
+          handleDisconnect();
+        }
+      };
+
+      const handleChainChanged = () => {
+        window.location.reload();
+      };
+
+      window.ethereum.on('accountsChanged', handleAccountsChanged);
+      window.ethereum.on('chainChanged', handleChainChanged);
+
+      return () => {
+        isMounted = false;
+        if (window.ethereum.removeListener) {
+          window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+          window.ethereum.removeListener('chainChanged', handleChainChanged);
+        }
+      };
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [fetchBalance, handleDisconnect]);
+
+  // Initial and periodic contract data sync
+  useEffect(() => {
     // Initial silent/cached fetch
     loadContractData(false);
 
@@ -610,11 +702,7 @@ export function App() {
     }
   };
 
-  // Disconnect Wallet
-  const handleDisconnect = () => {
-    setAccount(null);
-    setBalance('0');
-  };
+
 
   // File On-Chain Dispute / Appeal
   const handleFileDispute = async (orderId: string, reason: string) => {
