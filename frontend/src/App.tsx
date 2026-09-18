@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   PlusCircle,
   Sparkles,
@@ -135,95 +135,107 @@ export function App() {
     }
   };
 
-  // Fetch Contract Data
-  const loadContractData = useCallback(
-    async (isSilent = false) => {
-      if (!CONTRACT_ADDRESS || CONTRACT_ADDRESS === '0x0000000000000000000000000000000000000000') {
-        return;
-      }
+  // Concurrency guard to prevent overlapping RPC fetches
+  const isFetchingRef = useRef<boolean>(false);
 
-      if (!isSilent && orders.length === 0) {
-        setLoading(true);
-      }
+  // Fetch Contract Data stably with Stale-While-Revalidate and Parallel RPC calls
+  const loadContractData = useCallback(async (isSilent = false) => {
+    if (!CONTRACT_ADDRESS || CONTRACT_ADDRESS === '0x0000000000000000000000000000000000000000') {
+      return;
+    }
 
+    if (isFetchingRef.current) {
+      return;
+    }
+    isFetchingRef.current = true;
+
+    if (!isSilent) {
+      setLoading((prev) => (orders.length === 0 ? true : prev));
+    }
+
+    try {
+      const client = getGenLayerClient();
+
+      // 1. Fetch Stats safely
+      let fetchedStats: ContractStats | null = null;
       try {
-        const client = getGenLayerClient();
-
-        // 1. Fetch Stats safely
-        try {
-          const rawStats = await client.readContract({
-            address: CONTRACT_ADDRESS,
-            functionName: 'get_stats',
-            args: [],
-          });
-          if (rawStats) {
-            const parsed = typeof rawStats === 'string' ? JSON.parse(rawStats) : rawStats;
-            setStats(parsed);
-            try {
-              localStorage.setItem('datafair_cached_stats', JSON.stringify(parsed));
-            } catch {}
-          }
-        } catch (statsErr) {
-          console.warn('Stats fetch warning:', statsErr);
-        }
-
-        // 2. Fetch Order Count
-        const count = await client.readContract({
+        const rawStats = await client.readContract({
           address: CONTRACT_ADDRESS,
-          functionName: 'get_order_count',
+          functionName: 'get_stats',
           args: [],
         });
+        if (rawStats) {
+          fetchedStats = typeof rawStats === 'string' ? JSON.parse(rawStats) : rawStats;
+          setStats(fetchedStats);
+          try {
+            localStorage.setItem('datafair_cached_stats', JSON.stringify(fetchedStats));
+          } catch {}
+        }
+      } catch (statsErr) {
+        console.warn('Stats fetch warning:', statsErr);
+      }
 
-        const orderCount = Number(count || 0);
-        if (orderCount === 0) {
+      // 2. Fetch Order Count
+      const count = await client.readContract({
+        address: CONTRACT_ADDRESS,
+        functionName: 'get_order_count',
+        args: [],
+      });
+
+      const orderCount = Number(count);
+      if (isNaN(orderCount) || orderCount === 0) {
+        // Only clear orders if BOTH stats and count explicitly confirm 0 orders
+        if (fetchedStats && fetchedStats.total_orders === 0) {
           setOrders([]);
           try {
             localStorage.removeItem('datafair_cached_orders');
           } catch {}
-          return;
         }
-
-        // 3. Fetch each order
-        const loadedOrders: DatasetOrderData[] = [];
-        for (let i = 0; i < orderCount; i++) {
-          try {
-            const orderId = await client.readContract({
-              address: CONTRACT_ADDRESS,
-              functionName: 'get_order_id_by_index',
-              args: [i],
-            });
-
-            const rawOrder = await client.readContract({
-              address: CONTRACT_ADDRESS,
-              functionName: 'get_order',
-              args: [orderId],
-            });
-
-            if (rawOrder) {
-              const parsedOrder = typeof rawOrder === 'string' ? JSON.parse(rawOrder) : rawOrder;
-              loadedOrders.push(parsedOrder);
-            }
-          } catch (itemErr) {
-            console.warn(`Order index ${i} read failed:`, itemErr);
-          }
-        }
-
-        if (loadedOrders.length > 0) {
-          const reversed = loadedOrders.reverse();
-          setOrders(reversed);
-          try {
-            localStorage.setItem('datafair_cached_orders', JSON.stringify(reversed));
-          } catch {}
-        }
-      } catch (err) {
-        console.warn('Live contract read temporary hiccup (preserving existing orders):', err);
-        // CRITICAL: NEVER clear orders on transient RPC glitch!
-      } finally {
-        setLoading(false);
+        return;
       }
-    },
-    [orders.length]
-  );
+
+      // 3. Parallel fetch of all order IDs, then parallel fetch of all orders
+      const idPromises = Array.from({ length: orderCount }, (_, i) =>
+        client.readContract({
+          address: CONTRACT_ADDRESS,
+          functionName: 'get_order_id_by_index',
+          args: [i],
+        })
+      );
+      const orderIds = await Promise.all(idPromises);
+
+      const orderPromises = orderIds.map((id) =>
+        client
+          .readContract({
+            address: CONTRACT_ADDRESS,
+            functionName: 'get_order',
+            args: [id],
+          })
+          .catch((err) => {
+            console.warn(`Order #${id} fetch failed:`, err);
+            return null;
+          })
+      );
+      const rawOrders = await Promise.all(orderPromises);
+
+      const loadedOrders: DatasetOrderData[] = rawOrders
+        .filter(Boolean)
+        .map((raw) => (typeof raw === 'string' ? JSON.parse(raw) : raw));
+
+      if (loadedOrders.length > 0) {
+        const reversed = loadedOrders.reverse();
+        setOrders(reversed);
+        try {
+          localStorage.setItem('datafair_cached_orders', JSON.stringify(reversed));
+        } catch {}
+      }
+    } catch (err) {
+      console.warn('Live contract read temporary hiccup (preserving existing orders):', err);
+    } finally {
+      isFetchingRef.current = false;
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (window.ethereum) {
@@ -242,17 +254,17 @@ export function App() {
       });
     }
 
-    // Initial fetch (shows loader only if cache is completely empty)
+    // Initial silent/cached fetch
     loadContractData(false);
 
-    // Auto-poll silently every 8 seconds: no UI flicker, no skeleton flashes
+    // Auto-poll silently every 8 seconds: no UI flicker, no unmounting
     const pollInterval = setInterval(() => {
       loadContractData(true);
       if (account) fetchBalance(account);
     }, 8000);
 
     return () => clearInterval(pollInterval);
-  }, [fetchBalance, loadContractData, account]);
+  }, [account, fetchBalance, loadContractData]);
 
   // Helper to wait for transaction finality and sync state reliably
   const syncAfterTx = useCallback(
@@ -893,18 +905,34 @@ export function App() {
                   />
                 ))}
               </div>
+            ) : loading && orders.length === 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="holo-card rounded-3xl p-6 h-72 animate-pulse bg-dark-900/60 border border-dark-750 flex flex-col justify-between"
+                  >
+                    <div className="space-y-3">
+                      <div className="h-6 bg-dark-700/60 rounded-xl w-1/3"></div>
+                      <div className="h-4 bg-dark-700/40 rounded-lg w-2/3"></div>
+                      <div className="h-20 bg-dark-800/50 rounded-2xl"></div>
+                    </div>
+                    <div className="h-10 bg-dark-700/50 rounded-2xl"></div>
+                  </div>
+                ))}
+              </div>
             ) : (
               <div className="py-20 text-center border border-dashed border-cyan-500/30 rounded-3xl holo-card p-8 relative overflow-hidden">
                 <div className="w-16 h-16 rounded-3xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center mx-auto mb-4 text-cyan-400 shadow-[0_0_25px_rgba(0,229,255,0.2)]">
                   <Layers className="w-8 h-8 animate-pulse" />
                 </div>
                 <h3 className="text-white font-black text-lg font-mono mb-1">
-                  No Bounties Found on On-Chain Contract
+                  No Bounties Found in Selected Filter
                 </h3>
                 <p className="text-cyan-200/70 text-xs max-w-md mx-auto mb-6 font-mono leading-relaxed">
                   Contract: <span className="text-emerald-400 font-bold">{shortenAddress(CONTRACT_ADDRESS)}</span> (GenLayer studionet • Chain 61999).
                   <br />
-                  Deploy the first escrow bounty order to initiate autonomous dataset adjudication and settlement directly on-chain!
+                  Deploy an escrow bounty order or switch filter to ALL to view all live on-chain tasks!
                 </p>
                 <button
                   onClick={() => setIsCreateOpen(true)}
