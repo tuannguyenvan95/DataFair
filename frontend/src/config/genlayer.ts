@@ -19,17 +19,28 @@ export const STUDIONET_CONFIG = {
 export const CONTRACT_ADDRESS = (import.meta.env.VITE_CONTRACT_ADDRESS || '0x00A7e5110E97bF301Ec58B919af85Ab82C3599cB') as `0x${string}`;
 
 /**
- * Creates a read-only or signer-attached GenLayer client
+ * Creates a read-only or signer-attached GenLayer client.
+ * Uses /api/rpc on Vercel deployments to protect against IP rate-limits (500 req/hr).
  */
 export function getGenLayerClient(accountAddress?: `0x${string}`) {
+  const isVercel = typeof window !== 'undefined' && window.location.origin.includes('vercel.app');
+  const chainConfig = isVercel
+    ? {
+        ...studionet,
+        rpcUrls: {
+          default: { http: [`${window.location.origin}/api/rpc`] },
+        },
+      }
+    : studionet;
+
   if (accountAddress) {
     return createClient({
-      chain: studionet,
+      chain: chainConfig,
       account: accountAddress,
     });
   }
   return createClient({
-    chain: studionet,
+    chain: chainConfig,
   });
 }
 

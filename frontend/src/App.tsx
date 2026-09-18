@@ -44,6 +44,24 @@ import { TransactionStatus } from 'genlayer-js/types';
 // Verified baseline on-chain orders for deployed contract 0x00A7e5110E97bF301Ec58B919af85Ab82C3599cB
 const VERIFIED_ONCHAIN_ORDERS_BASELINE: DatasetOrderData[] = [
   {
+    order_id: 'data-3',
+    buyer: '0x9675eB6Ec2906e1A25Aa16b4CE2a6E3bB578d9B4',
+    provider: '0x0000000000000000000000000000000000000000',
+    escrow_amount: '2000000000000000000',
+    spec_requirements:
+      '[Task Title]: PyTorch Distributed Training Instruction Dataset\n[Domain Category]: AI & Deep Learning\n[Target Format]: JSONL\n[Required Schema]: {"instruction": str, "input": str, "output": str}\n[Minimum Volume]: 5 high-quality instruction pairs\n[Quality & Anti-Spam Rubric]: Clean valid JSONL formatting. Demonstrates authentic PyTorch DDP / FSDP multi-GPU training scripts with proper logging and gradient clipping. Zero synthetic spam.',
+    sample_dataset_url: '',
+    status: 0,
+    verdict: 'PENDING',
+    reason: 'Awaiting data provider deliverable sample submission.',
+    confidence: 0,
+    schema_score: 0,
+    quality_score: 0,
+    attempts: 0,
+    dispute_approved_by: '',
+    created_at_block: '3',
+  },
+  {
     order_id: 'data-2',
     buyer: '0x0B0b3E21bBE0a8E2E51525b9c14DC656A3A32056',
     provider: '0x0000000000000000000000000000000000000000',
@@ -108,8 +126,8 @@ export function App() {
       if (cached) return JSON.parse(cached);
     } catch {}
     return {
-      total_orders: 2,
-      total_escrow_locked: '3000000000000000000',
+      total_orders: 3,
+      total_escrow_locked: '5000000000000000000',
       total_orders_settled: 0,
     };
   });
